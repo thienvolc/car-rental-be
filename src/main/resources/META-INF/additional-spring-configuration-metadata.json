@@ -79,5 +79,10 @@
       "name": "app.jwt.refresh-expiration-ms",
       "type": "java.lang.String",
       "description": "Description for app.jwt.refresh-expiration-ms."
+    },
+    {
+      "name": "app.opt.opt-length",
+      "type": "java.lang.String",
+      "description": "Description for app.opt.opt-length."
     }
   ] }

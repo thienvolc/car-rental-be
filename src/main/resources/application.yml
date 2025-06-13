@@ -91,6 +91,9 @@ app:
     secret-key: "${SECRET_JWT_KEY}"
     expiration: "${JWT_ACCESS_EXPIRATION}"
     refresh-expiration: "${JWT_REFRESH_EXPIRATION}"
+  opt:
+    expiration-minutes: "${OTP_EXPIRATION_MINUTES:5}"
+    opt-length: "${OTP_LENGTH:6}"
 
 cloudinary:
   cloud-name: "${CLOUDINARY_CLOUD_NAME}"

@@ -4,18 +4,33 @@ import fun.dashspace.carrentalsystem.entity.OtpRequest;
 
 import java.util.Optional;
 
+import fun.dashspace.carrentalsystem.enums.OtpRequestType;
+
 public interface OtpRequestService {
-    OtpRequest createRegistrationOtpRequest(String email);
 
-    void checkOtpIsExpired(OtpRequest otpRequest);
+    OtpRequest createOtpRequest(String email, OtpRequestType type);
+    Optional<OtpRequest> findPendingOtpRequest(String email, String code, OtpRequestType type);
 
-    void invalidateOtpRequest(String email, String otpCode);
+    void markAsVerified(Integer otpId);
+    void markAsExpired(Integer otpId);
+    void invalidateOtpRequest(String email, String code);
 
-    Optional<OtpRequest> findPendingRegistrationOtpRequest(String email, String otpCode);
+    boolean isOtpExpired(OtpRequest otpRequest);
+    void validateOtpOrThrow(OtpRequest otpRequest);
 
-    void markAsVerified(Integer id);
+    default OtpRequest createRegistrationOtp(String email) {
+        return createOtpRequest(email, OtpRequestType.registration);
+    }
 
-    OtpRequest createForgotPasswordOtpRequest(String email);
+    default OtpRequest createForgotPasswordOtp(String email) {
+        return createOtpRequest(email, OtpRequestType.forgot_password);
+    }
 
-    Optional<OtpRequest> findPendingForgotPasswordOtpRequest(String email, String otpCode);
+    default Optional<OtpRequest> findRegistrationOtp(String email, String code) {
+        return findPendingOtpRequest(email, code, OtpRequestType.registration);
+    }
+
+    default Optional<OtpRequest> findForgotPasswordOtp(String email, String code) {
+        return findPendingOtpRequest(email, code, OtpRequestType.forgot_password);
+    }
 }

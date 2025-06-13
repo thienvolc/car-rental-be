@@ -5,6 +5,7 @@ import fun.dashspace.carrentalsystem.dto.response.auth.LoginResponse;
 import fun.dashspace.carrentalsystem.dto.response.auth.RefreshTokenResponse;
 import fun.dashspace.carrentalsystem.dto.response.auth.RegisterResponse;
 import fun.dashspace.carrentalsystem.dto.response.common.ApiResponse;
+import fun.dashspace.carrentalsystem.security.CustomUserDetails;
 import fun.dashspace.carrentalsystem.service.auth.AuthService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -12,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @Slf4j
@@ -50,7 +52,6 @@ public class AuthController {
             @Valid @RequestBody LoginResquest request,
             HttpServletRequest httpRequest) {
 
-        // Add request info for session tracking
         request.setIpAddress(getClientIpAddress(httpRequest));
         request.setUserAgent(httpRequest.getHeader("User-Agent"));
         if (request.getDeviceInfo() == null) {
@@ -78,7 +79,7 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<ApiResponse<String>> logout(@RequestBody RefreshTokenRequest request) {
+    public ResponseEntity<ApiResponse<String>> logout(@RequestBody LogoutRequest request) {
         authService.logout(request.getRefreshToken());
 
         return ResponseEntity.ok(ApiResponse.<String>builder()
@@ -89,8 +90,9 @@ public class AuthController {
     }
 
     @PostMapping("/logout-all")
-    public ResponseEntity<ApiResponse<String>> logoutAll(@RequestBody RefreshTokenRequest request) {
-        authService.logoutAll(request.getUserId());
+    public ResponseEntity<ApiResponse<String>> logoutAll(
+            @AuthenticationPrincipal CustomUserDetails currentUser) {
+        authService.logoutAll(currentUser.getId());
 
         return ResponseEntity.ok(ApiResponse.<String>builder()
                 .success(true)

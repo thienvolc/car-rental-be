@@ -1,79 +1,117 @@
 package fun.dashspace.carrentalsystem.service.auth;
 
+import fun.dashspace.carrentalsystem.config.properties.OtpProperties;
 import fun.dashspace.carrentalsystem.entity.OtpRequest;
 import fun.dashspace.carrentalsystem.enums.OtpRequestType;
 import fun.dashspace.carrentalsystem.enums.OtpStatus;
-import fun.dashspace.carrentalsystem.exception.custom.InvalidOtpException;
-import fun.dashspace.carrentalsystem.exception.custom.UnauthorizedException;
+import fun.dashspace.carrentalsystem.exception.custom.auth.InvalidOtpException;
 import fun.dashspace.carrentalsystem.repository.OtpRequestRepository;
-import fun.dashspace.carrentalsystem.util.OtpGenerator;
-import lombok.RequiredArgsConstructor;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.Random;
 
 @Service
-@RequiredArgsConstructor
 public class OtpRequestServiceImpl implements OtpRequestService {
 
     private final OtpRequestRepository otpRequestRepository;
+    private final int otpExpirationMinutes;
+    private final int optLength;
 
-    public OtpRequest createRegistrationOtpRequest(String email) {
-        String otpCode = OtpGenerator.generate6DigitOtp();
-        OtpRequest otpRequest = OtpRequest.builder()
-                .email(email)
-                .code(otpCode)
-                .requestType(OtpRequestType.registration)
-                .status(OtpStatus.pending)
-                .expiredAt(LocalDateTime.now().plusMinutes(5))
-                .build();
-
-        return otpRequestRepository.save(otpRequest);
-    }
-
-    public void checkOtpIsExpired(OtpRequest otpRequest) throws InvalidOtpException {
-        if (otpRequest.getExpiredAt().isBefore(LocalDateTime.now())) {
-            throw new InvalidOtpException("OTP is expired");
-        }
+    OtpRequestServiceImpl(
+            OtpProperties props, OtpRequestRepository repository) {
+        this.otpRequestRepository = repository;
+        this.otpExpirationMinutes = props.getOtpExpirationMinutes();
+        this.optLength = props.getOptLength();
     }
 
     @Override
-    public void invalidateOtpRequest(String email, String otpCode) {
-        otpRequestRepository.deleteByEmailAndCode(email, otpCode);
-    }
-
-    @Transactional(readOnly = true)
-    public Optional<OtpRequest> findPendingRegistrationOtpRequest(String email, String otpCode) {
-        return otpRequestRepository.findByEmailAndCodeAndRequestTypeAndStatus(
-                email, otpCode, OtpRequestType.registration, OtpStatus.pending);
-    }
-
-    public void markAsVerified(Integer id) {
-        OtpRequest otpRequest = otpRequestRepository.findById(id)
-                .orElseThrow(() -> new UnauthorizedException("Invalid OTP request ID"));
-        otpRequest.setStatus(OtpStatus.verified);
-        otpRequestRepository.save(otpRequest);
-    }
-
-    public OtpRequest createForgotPasswordOtpRequest(String email) {
-        String otpCode = OtpGenerator.generate6DigitOtp();
-        OtpRequest otpRequest = OtpRequest.builder()
-                .email(email)
-                .code(otpCode)
-                .requestType(OtpRequestType.forgot_password)
-                .status(OtpStatus.pending)
-                .expiredAt(LocalDateTime.now().plusMinutes(5))
-                .build();
-
+    public OtpRequest createOtpRequest(String email, OtpRequestType type) {
+        invalidateExistingOtps(email, type);
+        var otpRequest = buildOtpRequest(email, type);
         return otpRequestRepository.save(otpRequest);
+
     }
 
-    @Transactional(readOnly = true)
-    public Optional<OtpRequest> findPendingForgotPasswordOtpRequest(String email, String otpCode) {
-        return otpRequestRepository
-                .findByEmailAndCodeAndRequestTypeAndStatus(
-                        email, otpCode, OtpRequestType.forgot_password, OtpStatus.pending);
+    private void invalidateExistingOtps(String email, OtpRequestType type) {
+        otpRequestRepository.findByEmailAndRequestTypeAndStatus(email, type, OtpStatus.pending)
+                .forEach(otp -> updateOtpStatus(otp.getId(), OtpStatus.failed));
+    }
+
+    private void updateOtpStatus(Integer otpId, OtpStatus status) {
+        otpRequestRepository.findById(otpId)
+                .ifPresent(otp -> {
+                    otp.setStatus(status);
+                    otpRequestRepository.save(otp);
+                });
+    }
+
+    private OtpRequest buildOtpRequest(String email, OtpRequestType type) {
+        return OtpRequest.builder()
+                .email(email)
+                .code(generateOtpCode())
+                .requestType(type)
+                .status(OtpStatus.pending)
+                .expiredAt(calculateExpirationTime())
+                .build();
+    }
+
+    private String generateOtpCode() {
+        var random = new Random();
+        var code = new StringBuilder();
+        for (int i = 0; i < optLength; i++) {
+            code.append(random.nextInt(10));
+        }
+        return code.toString();
+    }
+
+    private LocalDateTime calculateExpirationTime() {
+        return LocalDateTime.now().plusMinutes(otpExpirationMinutes);
+    }
+
+    @Override
+    public Optional<OtpRequest> findPendingOtpRequest(String email, String code, OtpRequestType type) {
+        return otpRequestRepository.findByEmailAndCodeAndRequestTypeAndStatus(
+                email, code, type, OtpStatus.pending);
+    }
+
+    @Override
+    public void markAsVerified(Integer otpId) {
+        updateOtpStatus(otpId, OtpStatus.verified);
+    }
+
+    @Override
+    public void markAsExpired(Integer otpId) {
+        updateOtpStatus(otpId, OtpStatus.expired);
+    }
+
+    @Override
+    public void invalidateOtpRequest(String email, String code) {
+        otpRequestRepository.findByEmailAndCode(email, code)
+                .ifPresent(otp -> updateOtpStatus(otp.getId(), OtpStatus.failed));
+    }
+
+    @Override
+    public boolean isOtpExpired(OtpRequest otpRequest) {
+        return otpRequest.getExpiredAt().isBefore(LocalDateTime.now());
+    }
+
+    @Override
+    public void validateOtpOrThrow(OtpRequest otpRequest) {
+        if (isOtpExpired(otpRequest)) {
+            markAsExpired(otpRequest.getId());
+            throw new InvalidOtpException("OTP has expired");
+        }
+    }
+
+    private final int ONE_HOUR_IN_MS = 3600000;
+
+    @Scheduled(fixedRate = ONE_HOUR_IN_MS)
+    @Transactional
+    public void cleanUpExpiredOtps() {
+        otpRequestRepository.cleanupOldOtps(LocalDateTime.now());
     }
 }

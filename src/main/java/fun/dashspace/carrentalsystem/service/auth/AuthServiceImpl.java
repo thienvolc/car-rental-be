@@ -1,34 +1,25 @@
 package fun.dashspace.carrentalsystem.service.auth;
 
 import fun.dashspace.carrentalsystem.dto.request.auth.*;
-import fun.dashspace.carrentalsystem.dto.response.auth.LoginResponse;
-import fun.dashspace.carrentalsystem.dto.response.auth.RefreshTokenResponse;
-import fun.dashspace.carrentalsystem.dto.response.auth.RegisterResponse;
-import fun.dashspace.carrentalsystem.dto.response.auth.UserInfo;
-import fun.dashspace.carrentalsystem.entity.OtpRequest;
-import fun.dashspace.carrentalsystem.entity.Role;
-import fun.dashspace.carrentalsystem.entity.User;
-import fun.dashspace.carrentalsystem.entity.UserRole;
-import fun.dashspace.carrentalsystem.enums.RoleType;
-import fun.dashspace.carrentalsystem.enums.UserStatus;
-import fun.dashspace.carrentalsystem.exception.custom.BadRequestException;
-import fun.dashspace.carrentalsystem.exception.custom.InvalidOtpException;
-import fun.dashspace.carrentalsystem.exception.custom.UnauthorizedException;
-import fun.dashspace.carrentalsystem.exception.custom.UserNotFoundException;
+import fun.dashspace.carrentalsystem.dto.response.auth.*;
+import fun.dashspace.carrentalsystem.entity.*;
+import fun.dashspace.carrentalsystem.enums.*;
+import fun.dashspace.carrentalsystem.exception.custom.validation.BadRequestException;
+import fun.dashspace.carrentalsystem.exception.custom.auth.InvalidOtpException;
+import fun.dashspace.carrentalsystem.exception.custom.auth.UnauthorizedException;
+import fun.dashspace.carrentalsystem.exception.custom.resource.UserNotFoundException;
 import fun.dashspace.carrentalsystem.mail.EmailService;
-import fun.dashspace.carrentalsystem.repository.RoleRepository;
-import fun.dashspace.carrentalsystem.repository.UserRepository;
-import fun.dashspace.carrentalsystem.repository.UserRoleRepository;
+import fun.dashspace.carrentalsystem.repository.*;
 import fun.dashspace.carrentalsystem.security.CustomUserDetails;
 import fun.dashspace.carrentalsystem.util.GenerateUsernameFromEmail;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 @Transactional
@@ -39,190 +30,245 @@ public class AuthServiceImpl implements AuthService {
     private final RoleRepository roleRepository;
     private final UserRoleRepository userRoleRepository;
     private final OtpRequestService otpRequestService;
-
     private final JwtService jwtService;
     private final UserSessionService userSessionService;
-
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final EmailService emailService;
 
-
     @Override
     public void verifyEmail(VerifyEmailRequest req) {
-        checkEmailNotExists(req.getEmail());
-
-        OtpRequest otpRequest = otpRequestService.createRegistrationOtpRequest(req.getEmail());
-        emailService.sendRegistrationOtp(req.getEmail(), otpRequest.getCode());
+        validateEmailNotExists(req.getEmail());
+        sendVerificationOtp(req.getEmail());
     }
 
-    private void checkEmailNotExists(String email) {
+    private void validateEmailNotExists(String email) {
         if (userRepository.existsByEmail(email)) {
-            throw new BadRequestException("User already exists with email: " + email);
+            throw new BadRequestException("Email already exists: " + email);
         }
+    }
+
+    private void sendVerificationOtp(String email) {
+        var otpRequest = otpRequestService.createRegistrationOtp(email);
+        emailService.sendRegistrationOtp(email, otpRequest.getCode());
     }
 
     @Override
-    @Transactional
     public RegisterResponse register(RegisterRequest req) {
-        checkEmailNotExists(req.getEmail());
-        verifyOrInvalidateOtpRequestAndThrow(req);
-        User savedUser = createUser(req);
-        assignDefaultRole(savedUser);
-
-        return RegisterResponse.builder()
-                .success(true)
-                .message("Registration initiated. Please check your email for OTP verification.")
-                .email(req.getEmail())
-                .userId(savedUser.getId())
-                .build();
+        validateEmailNotExists(req.getEmail());
+        validateOtp(req);
+        var user = createAndSaveUser(req);
+        return buildRegisterResponse(req.getEmail(), user.getId());
     }
 
-    private void verifyOrInvalidateOtpRequestAndThrow(VerifyOtpRequest req) {
-        try {
-            OtpRequest otpRequest = verifyRegistrationOtpOrThrow(req.getEmail(), req.getOtpCode());
-            otpRequestService.markAsVerified(otpRequest.getId());
-        } catch (InvalidOtpException e) {
-            otpRequestService.invalidateOtpRequest(req.getEmail(), req.getOtpCode());
-            throw new UnauthorizedException("Invalid or expired OTP");
-        }
+    private void validateOtp(VerifyOtpRequest req) {
+        var otpRequest = findValidOtp(req.getEmail(), req.getOtpCode());
+        otpRequestService.markAsVerified(otpRequest.getId());
     }
 
-    private OtpRequest verifyRegistrationOtpOrThrow(String email, String otpCode) {
-        var otpRequest = otpRequestService.findPendingRegistrationOtpRequest(email, otpCode)
-                .orElseThrow(() -> new InvalidOtpException("Invalid OTP or OTP has expired"));
-        otpRequestService.checkOtpIsExpired(otpRequest);
+    private OtpRequest findValidOtp(String email, String code) {
+        var otpRequest = otpRequestService.findRegistrationOtp(email, code)
+                .orElseThrow(() -> new InvalidOtpException("Invalid or expired OTP"));
+        otpRequestService.validateOtpOrThrow(otpRequest);
         return otpRequest;
     }
 
-    private User createUser(RegisterRequest req) {
-        User pendingUser = User.builder()
+    private User createAndSaveUser(RegisterRequest req) {
+        var user = buildUser(req);
+        var savedUser = userRepository.save(user);
+        assignDefaultRole(savedUser);
+        return savedUser;
+    }
+
+    private User buildUser(RegisterRequest req) {
+        return User.builder()
                 .email(req.getEmail())
                 .password(passwordEncoder.encode(req.getPassword()))
                 .username(GenerateUsernameFromEmail.generate(req.getEmail()))
                 .status(UserStatus.active)
                 .build();
-
-        return userRepository.save(pendingUser);
     }
 
     private void assignDefaultRole(User user) {
-        Role renterRole = roleRepository.findByName(RoleType.renter)
-                .orElseThrow(() -> new RuntimeException("Default role not found"));
-
-        UserRole userRole = UserRole.builder()
-                .user(user)
-                .role(renterRole)
-                .build();
-
+        var role = findDefaultRole();
+        var userRole = UserRole.builder().user(user).role(role).build();
         userRoleRepository.save(userRole);
     }
 
+    private Role findDefaultRole() {
+        return roleRepository.findByName(RoleType.renter)
+                .orElseThrow(() -> new RuntimeException("Default role not found"));
+    }
+
+    private RegisterResponse buildRegisterResponse(String email, Integer userId) {
+        return RegisterResponse.builder()
+                .success(true)
+                .message("Registration successful. Please verify your email.")
+                .email(email)
+                .userId(userId)
+                .build();
+    }
+
     @Override
-    @Transactional
     public LoginResponse login(LoginResquest req) {
-        try {
-            Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(req.getEmail(), req.getPassword()));
-            CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        var userDetails = authenticateUser(req);
+        var tokens = generateTokenPair(userDetails);
+        createUserSession(req, tokens, userDetails);
+        return buildLoginResponse(userDetails, tokens);
+    }
 
-            String accessToken = jwtService.generateAccessToken(userDetails);
-            String refreshToken = jwtService.generateRefreshToken(userDetails);
-            String refreshTokenId = jwtService.extractTokenId(refreshToken);
-            long expirationTime = jwtService.getExpirationTimeFromNow(refreshToken);
+    private CustomUserDetails authenticateUser(LoginResquest req) {
+        var auth = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(req.getEmail(), req.getPassword()));
+        return (CustomUserDetails) auth.getPrincipal();
+    }
 
-            var createUserSessionReq = CreateUserSessionRequest.builder()
-                    .userId(userDetails.getId())
-                    .refreshTokenId(refreshTokenId)
-                    .ipAddress(req.getIpAddress())
-                    .deviceInfo(req.getDeviceInfo())
-                    .userAgent(req.getUserAgent())
-                    .expirationTime(expirationTime)
-                    .build();
+    private TokenPair generateTokenPair(CustomUserDetails userDetails) {
+        var accessToken = jwtService.generateAccessToken(userDetails);
+        var refreshToken = jwtService.generateRefreshToken(userDetails);
+        return new TokenPair(accessToken, refreshToken);
+    }
 
-            userSessionService.createSession(createUserSessionReq);
+    record TokenPair(String accessToken, String refreshToken) {
+    }
 
-            return LoginResponse.builder()
-                    .success(true)
-                    .message("Login successful")
-                    .accessToken(accessToken)
-                    .refreshToken(refreshToken)
-                    .expiresIn(jwtService.getExpirationTimeFromNow(accessToken))
-                    .user(UserInfo.builder()
-                            .id(userDetails.getId())
-                            .email(userDetails.getUsername())
-                            .username(userDetails.getUsername())
-                            .roles(userDetails.getAuthorities().stream()
-                                    .map(auth -> auth.getAuthority().replace("ROLE_", ""))
-                                    .toList())
-                            .build())
-                    .build();
-        } catch (BadCredentialsException e) {
-            throw new BadRequestException("Invalid email or password");
-        }
+    private void createUserSession(LoginResquest req, TokenPair tokens, CustomUserDetails userDetails) {
+        var tokenId = jwtService.extractTokenId(tokens.refreshToken());
+        var expirationTime = jwtService.getExpirationTimeFromNow(tokens.refreshToken());
+
+        var sessionReq = CreateUserSessionRequest.builder()
+                .userId(userDetails.getId())
+                .refreshTokenId(tokenId)
+                .ipAddress(req.getIpAddress())
+                .deviceInfo(req.getDeviceInfo())
+                .userAgent(req.getUserAgent())
+                .expirationTime(expirationTime)
+                .build();
+
+        userSessionService.createSession(sessionReq);
+    }
+
+    private LoginResponse buildLoginResponse(CustomUserDetails userDetails, TokenPair tokens) {
+        return LoginResponse.builder()
+                .success(true)
+                .message("Login successful")
+                .accessToken(tokens.accessToken())
+                .refreshToken(tokens.refreshToken())
+                .expiresIn(jwtService.getExpirationTimeFromNow(tokens.accessToken()))
+                .user(buildUserInfo(userDetails))
+                .build();
+    }
+
+    private UserInfo buildUserInfo(CustomUserDetails userDetails) {
+        return UserInfo.builder()
+                .id(userDetails.getId())
+                .email(userDetails.getUsername())
+                .username(userDetails.getUsername())
+                .roles(extractRoles(userDetails))
+                .build();
+    }
+
+    private List<String> extractRoles(CustomUserDetails userDetails) {
+        return userDetails.getAuthorities().stream()
+                .map(auth -> auth.getAuthority().replace("ROLE_", ""))
+                .toList();
     }
 
     @Override
     public RefreshTokenResponse refreshToken(RefreshTokenRequest req) {
-        if (!jwtService.validateToken(req.getRefreshToken()) ||
-                !jwtService.isRefreshToken(req.getRefreshToken())) {
+        validateRefreshToken(req.getRefreshToken());
+        var user = getUserFromToken(req.getRefreshToken());
+        var tokens = generateNewTokens(user, req.getRefreshToken());
+        return buildRefreshResponse(tokens);
+    }
+
+    private void validateRefreshToken(String token) {
+        if (!isValidRefreshToken(token)) {
             throw new UnauthorizedException("Invalid refresh token");
         }
+    }
 
-        String tokenId = jwtService.extractTokenId(req.getRefreshToken());
-        userSessionService.validateRefreshToken(tokenId);
+    private boolean isValidRefreshToken(String token) {
+        return jwtService.validateToken(token) && jwtService.isRefreshToken(token);
+    }
 
-        User user = userRepository.findById(req.getUserId())
+    private User getUserFromToken(String refreshToken) {
+        var userId = jwtService.extractUserId(refreshToken);
+        return userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
+    }
 
-        CustomUserDetails userDetails = new CustomUserDetails(user);
-        String newAccessToken = jwtService.generateAccessToken(userDetails);
-        String newRefreshToken = jwtService.generateRefreshToken(userDetails);
-        String newTokenId = jwtService.extractTokenId(newRefreshToken);
-        userSessionService.updateRefreshTokenSession(tokenId, newTokenId);
+    private TokenPair generateNewTokens(User user, String oldRefreshToken) {
+        var userDetails = new CustomUserDetails(user);
+        var tokens = generateTokenPair(userDetails);
+        updateRefreshTokenSession(oldRefreshToken, tokens.refreshToken());
+        return tokens;
+    }
 
+    private void updateRefreshTokenSession(String oldToken, String newToken) {
+        var oldTokenId = jwtService.extractTokenId(oldToken);
+        var newTokenId = jwtService.extractTokenId(newToken);
+        userSessionService.updateRefreshTokenId(oldTokenId, newTokenId);
+    }
+
+    private RefreshTokenResponse buildRefreshResponse(TokenPair tokens) {
         return RefreshTokenResponse.builder()
                 .success(true)
-                .accessToken(newAccessToken)
-                .refreshToken(newRefreshToken)
-                .expiresIn(jwtService.getExpirationTimeFromNow(newAccessToken))
+                .accessToken(tokens.accessToken())
+                .refreshToken(tokens.refreshToken())
+                .expiresIn(jwtService.getExpirationTimeFromNow(tokens.accessToken()))
                 .build();
     }
 
     @Override
     public void logout(String refreshToken) {
-        if (jwtService.validateToken(refreshToken) && jwtService.isRefreshToken(refreshToken)) {
-            String tokenId = jwtService.extractTokenId(refreshToken);
-            userSessionService.deleteSession(tokenId);
+        if (isValidRefreshToken(refreshToken)) {
+            deleteSession(jwtService.extractTokenId(refreshToken));
         }
+    }
+
+    private void deleteSession(String tokenId) {
+        userSessionService.deleteSession(tokenId);
     }
 
     @Override
     public void logoutAll(Integer userId) {
-        userSessionService.deleteAllSession(userId);
+        userSessionService.deleteAllSessions(userId);
     }
 
     @Override
     public void requestPasswordReset(PasswordResetRequest req) {
-        checkEmailExists(req.getEmail());
-        OtpRequest otpRequest = otpRequestService.createForgotPasswordOtpRequest(req.getEmail());
-        emailService.sendPasswordResetOtp(req.getEmail(), otpRequest.getCode());
+        validateEmailExists(req.getEmail());
+        sendPasswordResetOtp(req.getEmail());
+    }
+
+    private void validateEmailExists(String email) {
+        if (!userRepository.existsByEmail(email)) {
+            throw new UserNotFoundException("Email not found: " + email);
+        }
+    }
+
+    private void sendPasswordResetOtp(String email) {
+        var otpRequest = otpRequestService.createForgotPasswordOtp(email);
+        emailService.sendPasswordResetOtp(email, otpRequest.getCode());
     }
 
     @Override
     public void resetPassword(ResetPasswordRequest req) {
-        checkEmailExists(req.getEmail());
-        verifyOrInvalidateOtpRequestAndThrow(req);
-        User user = userRepository.findByEmail(req.getEmail())
-                .orElseThrow(() -> new UserNotFoundException("User not found"));
+        validateEmailExists(req.getEmail());
+        validateOtp(req);
+        updateUserPassword(req);
+    }
+
+    private void updateUserPassword(ResetPasswordRequest req) {
+        var user = findUserByEmail(req.getEmail());
         user.setPassword(passwordEncoder.encode(req.getNewPassword()));
         userRepository.save(user);
         logoutAll(user.getId());
     }
 
-    private void checkEmailExists(String email) {
-        if (!userRepository.existsByEmail(email)) {
-            throw new UserNotFoundException("User not found with email: " + email);
-        }
+    private User findUserByEmail(String email) {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("User not found with email: " + email));
     }
 }
