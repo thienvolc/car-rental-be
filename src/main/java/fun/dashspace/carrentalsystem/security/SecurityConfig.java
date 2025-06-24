@@ -40,6 +40,7 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final UserDetailsService userDetailsService;
     private final CorsProps corsProps;
+    private final ObjectMapper objectMapper;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -120,6 +121,6 @@ public class SecurityConfig {
                 "error", status.getReasonPhrase(),
                 "timestamp", Instant.now()
         );
-        new ObjectMapper().writeValue(res.getOutputStream(), errorBody);
+        objectMapper.writeValue(res.getOutputStream(), errorBody);
     }
 }

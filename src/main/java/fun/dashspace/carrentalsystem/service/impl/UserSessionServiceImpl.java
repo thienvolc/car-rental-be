@@ -50,9 +50,11 @@ public class UserSessionServiceImpl implements UserSessionService {
     }
 
     private UserSession buildUserSession(CreateUserSessionRequest req, User user) {
+        System.out.println(req.getDeviceInfo() + " " +  req.getIpAddress() + " " +req.getUserAgent());
         return UserSession.builder()
                 .user(user)
                 .refreshTokenId(req.getRefreshTokenId())
+                .ipAddress(req.getIpAddress())
                 .userAgent(req.getUserAgent())
                 .deviceInfo(req.getDeviceInfo())
                 .loginTime(Instant.now())

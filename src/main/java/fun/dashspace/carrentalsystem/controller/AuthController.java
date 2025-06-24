@@ -46,18 +46,23 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<LoginResponse>> login(
             @Valid @RequestBody LoginResquest req, HttpServletRequest httpReq) {
-        req.setIpAddress(httpReq.getRemoteAddr());
-        req.setUserAgent(httpReq.getHeader("User-Agent"));
-        req.setDeviceInfo(httpReq.getHeader("Device-Name"));
+        detachDeviceInfo(req, httpReq);
         LoginResponse res = authService.login(req);
         return ResponseEntity.ok(ApiResponse.ok(res, "Login successfully"));
     }
 
+    private void detachDeviceInfo(@Valid LoginResquest req, HttpServletRequest httpReq) {
+        var ipAddress = httpReq.getRemoteAddr();
+        var userAgent = httpReq.getHeader("User-Agent");
+        req.setIpAddress(ipAddress);
+        req.setUserAgent(userAgent);
+        req.setDeviceInfo(String.format("IP: %s | Agent: %s", ipAddress, userAgent));
+    }
 
-    @PostMapping("/refresh-token")
-    public ResponseEntity<ApiResponse<RefreshTokenResponse>> refreshToken(
-            @RequestBody RefreshTokenRequest req, @AuthenticationPrincipal CustomUserDetails userDetails) {
-        RefreshTokenResponse res = authService.refreshToken(req.getRefreshToken(), userDetails);
+
+    @PostMapping("/token/refresh")
+    public ResponseEntity<ApiResponse<RefreshTokenResponse>> refreshToken(@RequestBody RefreshTokenRequest req) {
+        RefreshTokenResponse res = authService.refreshToken(req.getRefreshToken());
         return ResponseEntity.ok(ApiResponse.ok(res, "Token refreshed successfully"));
     }
 
@@ -73,7 +78,8 @@ public class AuthController {
         authService.logoutAll(userDetails.getId());
         return ResponseEntity.ok(ApiResponse.ok("Logout from all devices successful"));
     }
-//
+
+    //
     @PostMapping("/password/forgot")
     public ResponseEntity<ApiResponse<String>> forgotPassword(@RequestBody ForgotPasswordRequest req) {
         authService.forgotPassword(req.getEmail());

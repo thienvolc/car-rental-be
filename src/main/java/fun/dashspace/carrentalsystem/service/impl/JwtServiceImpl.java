@@ -126,7 +126,8 @@ public class JwtServiceImpl implements JwtService {
     }
 
     private TokenType getTokenType(String token) {
-        return getClaims(token).get("tokenType", TokenType.class);
+        String type = getClaims(token).get("tokenType", String.class);
+        return TokenType.valueOf(type);
     }
 
     @Override

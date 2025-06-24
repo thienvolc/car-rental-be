@@ -3,7 +3,6 @@ package fun.dashspace.carrentalsystem.service;
 import fun.dashspace.carrentalsystem.dto.auth.request.*;
 import fun.dashspace.carrentalsystem.dto.auth.response.LoginResponse;
 import fun.dashspace.carrentalsystem.dto.auth.response.RefreshTokenResponse;
-import fun.dashspace.carrentalsystem.security.CustomUserDetails;
 
 public interface AuthService {
     void sendRegistrationEmailOtp(RegistrationEmailRequest req);
@@ -13,7 +12,7 @@ public interface AuthService {
     void registerRenter(RenterRegistrationRequest req);
     LoginResponse login(LoginResquest req);
 
-    RefreshTokenResponse refreshToken(String refreshToken, CustomUserDetails userDetails);
+    RefreshTokenResponse refreshToken(String refreshToken);
 
     void logout(Integer userId, String refreshToken);
     void logoutAll(Integer userId);

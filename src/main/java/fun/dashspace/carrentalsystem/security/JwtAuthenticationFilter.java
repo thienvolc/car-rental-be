@@ -19,7 +19,6 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
@@ -33,8 +32,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             @NonNull HttpServletRequest req,
             @NonNull HttpServletResponse res,
             @NonNull FilterChain filterChain) throws ServletException, IOException {
+        System.out.println("Starting JWT Authentication Filter");
         if (!isPublicPath(req)) {
             String accessToken = extractToken(req);
+            System.out.println("Access Token: " + accessToken);
             verifyToken(accessToken);
             authenticateUserByToken(accessToken, req);
         }

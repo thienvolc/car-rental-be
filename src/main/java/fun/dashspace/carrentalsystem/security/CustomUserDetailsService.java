@@ -20,7 +20,7 @@ public class CustomUserDetailsService implements UserDetailsService {
     }
 
     private User getUserByEmailOrThrow(String email) {
-        return userRepo.findByEmail(email)
+        return userRepo.findByEmailWithRoles(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + email));
     }
 }
