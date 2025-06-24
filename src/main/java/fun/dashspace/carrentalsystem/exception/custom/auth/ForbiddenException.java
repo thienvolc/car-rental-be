@@ -3,7 +3,6 @@ package fun.dashspace.carrentalsystem.exception.custom.auth;
 import org.springframework.http.HttpStatus;
 
 public class ForbiddenException extends AuthException {
-
     private static final HttpStatus STATUS = HttpStatus.FORBIDDEN;
     private static final String ERROR = "Forbidden";
 

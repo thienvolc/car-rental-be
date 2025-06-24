@@ -1,13 +1,16 @@
 package fun.dashspace.carrentalsystem.controller;
 
-import fun.dashspace.carrentalsystem.dto.location.District;
-import fun.dashspace.carrentalsystem.dto.location.Province;
-import fun.dashspace.carrentalsystem.dto.location.Ward;
-import fun.dashspace.carrentalsystem.service.location.LocationService;
+import fun.dashspace.carrentalsystem.dto.common.response.ApiResponse;
+import fun.dashspace.carrentalsystem.dto.location.DistrictListResponse;
+import fun.dashspace.carrentalsystem.dto.location.ProvinceListResponse;
+import fun.dashspace.carrentalsystem.dto.location.WardListResponse;
+import fun.dashspace.carrentalsystem.service.LocationService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/locations")
@@ -16,17 +19,22 @@ public class LocationController {
     private final LocationService locationService;
 
     @GetMapping("/provinces")
-    public List<Province> getProvinces() {
-        return locationService.getAllProvinces();
+    public ResponseEntity<ApiResponse<ProvinceListResponse>> getProvinces() {
+        ProvinceListResponse provinces = locationService.getAllProvinces();
+        return ResponseEntity.ok(ApiResponse.ok(provinces, "Provinces fetched successfully"));
     }
 
     @GetMapping("/districts/{provinceCode}")
-    public List<District> getDistrictsByCode(@PathVariable int provinceCode) {
-        return locationService.getDistrictsByProvinceCodeAndDepth(provinceCode);
+    public ResponseEntity<ApiResponse<DistrictListResponse>> getDistrictsByCode(
+            @PathVariable int provinceCode) {
+        DistrictListResponse districts = locationService.getDistrictsByProvinceCodeAndDepth(provinceCode);
+        return ResponseEntity.ok(ApiResponse.ok(districts, "Districts fetched successfully"));
     }
 
     @GetMapping("/wards/{districtCode}")
-    public List<Ward> getWardsByCode(@PathVariable int districtCode) {
-        return locationService.getWardsByDistrictCodeAndDepth(districtCode);
+    public ResponseEntity<ApiResponse<WardListResponse>> getWardsByCode(
+            @PathVariable int districtCode) {
+        WardListResponse wards = locationService.getWardsByDistrictCodeAndDepth(districtCode);
+        return ResponseEntity.ok(ApiResponse.ok(wards, "Wards fetched successfully"));
     }
 }

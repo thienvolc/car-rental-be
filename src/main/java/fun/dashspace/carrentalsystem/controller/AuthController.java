@@ -1,145 +1,94 @@
 package fun.dashspace.carrentalsystem.controller;
 
-import fun.dashspace.carrentalsystem.dto.request.auth.*;
-import fun.dashspace.carrentalsystem.dto.response.auth.LoginResponse;
-import fun.dashspace.carrentalsystem.dto.response.auth.RefreshTokenResponse;
-import fun.dashspace.carrentalsystem.dto.response.auth.RegisterResponse;
-import fun.dashspace.carrentalsystem.dto.response.common.ApiResponse;
+import fun.dashspace.carrentalsystem.dto.auth.request.*;
+import fun.dashspace.carrentalsystem.dto.auth.response.LoginResponse;
+import fun.dashspace.carrentalsystem.dto.auth.response.RefreshTokenResponse;
+import fun.dashspace.carrentalsystem.dto.common.response.ApiResponse;
 import fun.dashspace.carrentalsystem.security.CustomUserDetails;
-import fun.dashspace.carrentalsystem.service.auth.AuthService;
+import fun.dashspace.carrentalsystem.service.AuthService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-@Slf4j
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
 public class AuthController {
-
     private final AuthService authService;
 
-    @PostMapping("/register")
-    public ResponseEntity<ApiResponse<RegisterResponse>> register(@Valid @RequestBody RegisterRequest request) {
-        RegisterResponse response = authService.register(request);
-
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.<RegisterResponse>builder()
-                        .success(true)
-                        .message("Registration initiated successfully")
-                        .data(response)
-                        .build());
+    @PostMapping("/registration/email")
+    public ResponseEntity<ApiResponse<String>> sendRegistrationEmailOtp(@RequestBody RegistrationEmailRequest req) {
+        authService.sendRegistrationEmailOtp(req);
+        return ResponseEntity.ok(ApiResponse.ok("Email verification OTP sent successfully"));
     }
 
-    @PostMapping("/verify-registration")
-    public ResponseEntity<ApiResponse<String>> verifyRegistration(@Valid @RequestBody VerifyEmailRequest request) {
-        authService.verifyEmail(request);
+    @PostMapping("/registration/email/verify")
+    public ResponseEntity<ApiResponse<String>> verifyRegistraionEmailOtp(@RequestBody VerifyOtpRequest req) {
+        authService.verifyRegistraionEmailOtp(req);
+        return ResponseEntity.ok(ApiResponse.ok("Email verified successfully"));
+    }
 
-        return ResponseEntity.ok(ApiResponse.<String>builder()
-                .success(true)
-                .message("Registration verified successfully")
-                .data("Account activated")
-                .build());
+    @PostMapping("/otp/resend")
+    public ResponseEntity<ApiResponse<String>> resendOtp(@RequestBody ResendOtpRequest req) {
+        authService.resendOtp(req);
+        return ResponseEntity.ok(ApiResponse.ok("OTP resent successfully"));
+    }
+
+    @PostMapping("/renter/register")
+    public ResponseEntity<ApiResponse<String>> registerRenter(@Valid @RequestBody RenterRegistrationRequest request) {
+        authService.registerRenter(request);
+        return ResponseEntity.ok(ApiResponse.ok("Registration initiated successfully"));
     }
 
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<LoginResponse>> login(
-            @Valid @RequestBody LoginResquest request,
-            HttpServletRequest httpRequest) {
-
-        request.setIpAddress(getClientIpAddress(httpRequest));
-        request.setUserAgent(httpRequest.getHeader("User-Agent"));
-        if (request.getDeviceInfo() == null) {
-            request.setDeviceInfo(extractDeviceInfo(httpRequest));
-        }
-
-        LoginResponse response = authService.login(request);
-
-        return ResponseEntity.ok(ApiResponse.<LoginResponse>builder()
-                .success(true)
-                .message("Login successful")
-                .data(response)
-                .build());
+            @Valid @RequestBody LoginResquest req, HttpServletRequest httpReq) {
+        req.setIpAddress(httpReq.getRemoteAddr());
+        req.setUserAgent(httpReq.getHeader("User-Agent"));
+        req.setDeviceInfo(httpReq.getHeader("Device-Name"));
+        LoginResponse res = authService.login(req);
+        return ResponseEntity.ok(ApiResponse.ok(res, "Login successfully"));
     }
 
-    @PostMapping("/refresh-token")
-    public ResponseEntity<ApiResponse<RefreshTokenResponse>> refreshToken(@Valid @RequestBody RefreshTokenRequest request) {
-        RefreshTokenResponse response = authService.refreshToken(request);
 
-        return ResponseEntity.ok(ApiResponse.<RefreshTokenResponse>builder()
-                .success(true)
-                .message("Token refreshed successfully")
-                .data(response)
-                .build());
+    @PostMapping("/refresh-token")
+    public ResponseEntity<ApiResponse<RefreshTokenResponse>> refreshToken(
+            @RequestBody RefreshTokenRequest req, @AuthenticationPrincipal CustomUserDetails userDetails) {
+        RefreshTokenResponse res = authService.refreshToken(req.getRefreshToken(), userDetails);
+        return ResponseEntity.ok(ApiResponse.ok(res, "Token refreshed successfully"));
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<ApiResponse<String>> logout(@RequestBody LogoutRequest request) {
-        authService.logout(request.getRefreshToken());
-
-        return ResponseEntity.ok(ApiResponse.<String>builder()
-                .success(true)
-                .message("Logout successful")
-                .data("Session terminated")
-                .build());
+    public ResponseEntity<ApiResponse<String>> logout(
+            @RequestBody LogoutRequest req, @AuthenticationPrincipal CustomUserDetails userDetails) {
+        authService.logout(userDetails.getId(), req.getRefreshToken());
+        return ResponseEntity.ok(ApiResponse.ok("Logout successful"));
     }
 
-    @PostMapping("/logout-all")
-    public ResponseEntity<ApiResponse<String>> logoutAll(
-            @AuthenticationPrincipal CustomUserDetails currentUser) {
-        authService.logoutAll(currentUser.getId());
-
-        return ResponseEntity.ok(ApiResponse.<String>builder()
-                .success(true)
-                .message("Logged out from all devices")
-                .data("All sessions terminated")
-                .build());
+    @PostMapping("/logout/all")
+    public ResponseEntity<ApiResponse<String>> logoutAll(@AuthenticationPrincipal CustomUserDetails userDetails) {
+        authService.logoutAll(userDetails.getId());
+        return ResponseEntity.ok(ApiResponse.ok("Logout from all devices successful"));
+    }
+//
+    @PostMapping("/password/forgot")
+    public ResponseEntity<ApiResponse<String>> forgotPassword(@RequestBody ForgotPasswordRequest req) {
+        authService.forgotPassword(req.getEmail());
+        return ResponseEntity.ok(ApiResponse.ok("Password reset OTP sent successfully"));
     }
 
-    @PostMapping("/forgot-password")
-    public ResponseEntity<ApiResponse<String>> forgotPassword(@Valid @RequestBody PasswordResetRequest request) {
-        authService.requestPasswordReset(request);
-
-        return ResponseEntity.ok(ApiResponse.<String>builder()
-                .success(true)
-                .message("Password reset OTP sent to your email")
-                .data("Check your email")
-                .build());
+    @PostMapping("/password/verify-otp")
+    public ResponseEntity<ApiResponse<String>> verifyResetOtp(@RequestBody VerifyResetOtpRequest req) {
+        authService.verifyResetOtp(req);
+        return ResponseEntity.ok(ApiResponse.ok("Reset OTP verified successfully"));
     }
 
-    @PostMapping("/reset-password")
-    public ResponseEntity<ApiResponse<String>> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
-        authService.resetPassword(request);
-
-        return ResponseEntity.ok(ApiResponse.<String>builder()
-                .success(true)
-                .message("Password reset successful")
-                .data("Password updated")
-                .build());
-    }
-
-    // Helper methods
-    private String getClientIpAddress(HttpServletRequest request) {
-        String xForwardedFor = request.getHeader("X-Forwarded-For");
-        if (xForwardedFor != null && !xForwardedFor.isEmpty()) {
-            return xForwardedFor.split(",")[0].trim();
-        }
-
-        String xRealIp = request.getHeader("X-Real-IP");
-        if (xRealIp != null && !xRealIp.isEmpty()) {
-            return xRealIp;
-        }
-
-        return request.getRemoteAddr();
-    }
-
-    private String extractDeviceInfo(HttpServletRequest request) {
-        String userAgent = request.getHeader("User-Agent");
-        return userAgent != null ? userAgent.substring(0, Math.min(userAgent.length(), 255)) : "Unknown";
+    @PostMapping("/password/reset")
+    public ResponseEntity<ApiResponse<String>> resetPassword(@RequestBody ResetPasswordRequest req) {
+        authService.resetPassword(req);
+        return ResponseEntity.ok(ApiResponse.ok("Password reset completed"));
     }
 }

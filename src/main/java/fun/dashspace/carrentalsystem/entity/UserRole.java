@@ -1,18 +1,20 @@
 package fun.dashspace.carrentalsystem.entity;
 
+import fun.dashspace.carrentalsystem.entity.base.BaseEntity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
-
-import fun.dashspace.carrentalsystem.entity.base.BaseEntity;
+import lombok.experimental.SuperBuilder;
 
 @Entity
-@Table(name = "user_role")
-@Data
+@Table(name = "user_roles")
+@Getter
+@Setter
+@EqualsAndHashCode(callSuper = true, exclude = {"user", "role"})
+@ToString(callSuper = true, exclude = {"user", "role"})
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
-@EqualsAndHashCode(callSuper = true)
+@SuperBuilder
 public class UserRole extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)

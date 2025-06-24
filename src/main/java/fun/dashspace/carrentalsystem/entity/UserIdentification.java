@@ -1,22 +1,23 @@
 package fun.dashspace.carrentalsystem.entity;
 
+import fun.dashspace.carrentalsystem.entity.base.BaseEntity;
+import fun.dashspace.carrentalsystem.enums.VerificationStatus;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 
-import java.time.LocalDateTime;
-
-import fun.dashspace.carrentalsystem.entity.base.BaseEntity;
-import fun.dashspace.carrentalsystem.enums.VerificationStatus;
-import org.springframework.data.annotation.LastModifiedDate;
+import java.time.Instant;
 
 @Entity
-@Table(name = "user_identification")
-@Data
+@Table(name = "user_identifications")
+@Getter
+@Setter
+@EqualsAndHashCode(callSuper = true, exclude = {"user", "verifiedByUser"})
+@ToString(callSuper = true, exclude = {"user", "verifiedByUser"})
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
-@EqualsAndHashCode(callSuper = true)
+@SuperBuilder
 public class UserIdentification extends BaseEntity {
 
     @OneToOne(fetch = FetchType.LAZY)
@@ -29,7 +30,7 @@ public class UserIdentification extends BaseEntity {
     private User verifiedByUser;
 
     @Column(name = "verified_at")
-    private LocalDateTime verifiedAt;
+    private Instant verifiedAt;
 
     @Column(name = "full_name", length = 100, nullable = false)
     @NotBlank(message = "Full name is required")
@@ -64,8 +65,8 @@ public class UserIdentification extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     @Builder.Default
-    private VerificationStatus status = VerificationStatus.pending;
+    private VerificationStatus status = VerificationStatus.PENDING;
 
     @Column(name = "updated_at", insertable = false, updatable = false)
-    private LocalDateTime updatedAt;
+    private Instant updatedAt;
 }

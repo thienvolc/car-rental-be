@@ -1,6 +1,8 @@
 package fun.dashspace.carrentalsystem.security;
 
-import fun.dashspace.carrentalsystem.service.auth.JwtService;
+import fun.dashspace.carrentalsystem.exception.custom.auth.TokenException;
+import fun.dashspace.carrentalsystem.exception.custom.auth.UnauthorizedException;
+import fun.dashspace.carrentalsystem.service.JwtService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -12,44 +14,60 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
-
     private final UserDetailsService userDetailsService;
     private final JwtService jwtService;
+    private final AntPathMatcher antPathMatcher = new AntPathMatcher();
 
     @Override
     protected void doFilterInternal(
             @NonNull HttpServletRequest req,
             @NonNull HttpServletResponse res,
             @NonNull FilterChain filterChain) throws ServletException, IOException {
-
-        var token = extractToken(req);
-        if (token != null && jwtService.validateToken(token)) {
-            authenticateUser(token, req);
+        if (!isPublicPath(req)) {
+            String accessToken = extractToken(req);
+            verifyToken(accessToken);
+            authenticateUserByToken(accessToken, req);
         }
-
         filterChain.doFilter(req, res);
     }
 
-    private String extractToken(HttpServletRequest request) {
-        var header = request.getHeader("Authorization");
-        return (header != null && header.startsWith("Bearer "))
-                ? header.substring(7)
-                : null;
+    private boolean isPublicPath(HttpServletRequest req) {
+        String path = req.getServletPath();
+        return Arrays.stream(SecurityPaths.PUBLIC_PATHS)
+                .anyMatch(pattern -> antPathMatcher.match(pattern, path));
     }
 
-    private void authenticateUser(String token, HttpServletRequest req) {
-        var username = jwtService.extractUsername(token);
+    private String extractToken(HttpServletRequest req) {
+        String header = req.getHeader("Authorization");
+        if (header != null && header.startsWith("Bearer "))
+            return header.substring(7);
+
+        throw new UnauthorizedException("Missing token");
+    }
+
+    private void verifyToken(String token) {
+        try {
+            jwtService.verifyAccessToken(token);
+        } catch (TokenException ex) {
+            throw new UnauthorizedException(ex.toString());
+        }
+    }
+
+    private void authenticateUserByToken(String accessToken, HttpServletRequest req) {
+        var username = jwtService.extractUsername(accessToken);
         var userDetails = userDetailsService.loadUserByUsername(username);
 
-        var authToken = new UsernamePasswordAuthenticationToken(
-                userDetails, null, userDetails.getAuthorities());
+        var authToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
         authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(req));
 
         SecurityContextHolder.getContext().setAuthentication(authToken);

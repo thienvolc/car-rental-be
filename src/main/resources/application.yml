@@ -1,5 +1,9 @@
 #debug: true
 
+springdoc:
+  swagger-ui:
+    path: /swagger/swagger-ui.html
+
 server:
   port: ${SERVER_PORT:8080}
   servlet:
@@ -11,17 +15,16 @@ server:
     enabled: true
 
 spring:
-  mvc:
-    mcnthrow-exception-if-no-handler-found: true
   web:
     resources:
       add-mappings: false
 
-  profiles:
-    active: "${SPRING_PROFILES_ACTIVE:dev}"
-
   application:
     name: car-rental-system
+
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
 
   datasource:
     url: "${DATABASE_URL}"
@@ -91,9 +94,9 @@ app:
     secret-key: "${SECRET_JWT_KEY}"
     expiration: "${JWT_ACCESS_EXPIRATION}"
     refresh-expiration: "${JWT_REFRESH_EXPIRATION}"
-  opt:
-    expiration-minutes: "${OTP_EXPIRATION_MINUTES:5}"
-    opt-length: "${OTP_LENGTH:6}"
+  otp:
+    expiration: "${OTP_EXPIRATION:300}"
+    code-length: "${OTP_CODE_LENGTH:6}"
 
 cloudinary:
   cloud-name: "${CLOUDINARY_CLOUD_NAME}"

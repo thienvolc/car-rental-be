@@ -1,10 +1,10 @@
 package fun.dashspace.carrentalsystem.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import fun.dashspace.carrentalsystem.config.props.CorsProps;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
@@ -31,8 +31,6 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.io.IOException;
 import java.time.Instant;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 
 @Configuration
@@ -41,36 +39,7 @@ import java.util.Map;
 public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final UserDetailsService userDetailsService;
-
-    @Value("${security.cors.allowed-origins}")
-    private String allowedOrigins;
-
-    private final String[] PUBLIC_PATHS = {
-            "/locations/**",
-            "/auth/**",
-            "/cars/search",
-            "/swagger-ui/**",
-            "/v3/api-docs/**",
-    };
-
-    private final String[] USER_PATHS = {
-            "/users/account/**",
-            "/users/bookings/**",
-            "/profile/**",
-    };
-
-    private final String[] HOST_PATHS = {
-            "/portal/cars/**",
-            "/portal/bookings/**",
-            "/portal/datacenter/**",
-    };
-
-    private final String[] ADMIN_PATHS = {
-            "/admin/**",
-            "/users/all",
-            "/reports/**",
-            "/datacenter/**",
-    };
+    private final CorsProps corsProps;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -78,15 +47,15 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .userDetailsService(userDetailsService)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(PUBLIC_PATHS).permitAll()
-                        .requestMatchers(USER_PATHS).hasAnyRole("RENTER", "HOST", "ADMIN")
-                        .requestMatchers(HOST_PATHS).hasRole("HOST")
-                        .requestMatchers(ADMIN_PATHS).hasRole("ADMIN")
+                        .requestMatchers(SecurityPaths.PUBLIC_PATHS).permitAll()
+                        .requestMatchers(SecurityPaths.USER_PATHS).hasAnyRole("RENTER", "HOST", "ADMIN")
+                        .requestMatchers(SecurityPaths.HOST_PATHS).hasRole("HOST")
+                        .requestMatchers(SecurityPaths.ADMIN_PATHS).hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
-                .userDetailsService(userDetailsService)
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint(this::handleAuthenticationError)
                         .accessDeniedHandler(this::handleAccessDeniedError)
@@ -107,10 +76,10 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         var corsConfiguration = new CorsConfiguration();
-        corsConfiguration.setAllowedOrigins(List.of(allowedOrigins.split(",")));
-        corsConfiguration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        corsConfiguration.setAllowedHeaders(List.of("*"));
-        corsConfiguration.setAllowCredentials(true);
+        corsConfiguration.setAllowedOrigins(corsProps.getAllowedOriginList());
+        corsConfiguration.setAllowedMethods(corsProps.getAllowedMethodList());
+        corsConfiguration.setAllowedHeaders(corsProps.getAllowedHeaderList());
+        corsConfiguration.setAllowCredentials(corsProps.getAllowCredentials());
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", corsConfiguration);
@@ -149,7 +118,7 @@ public class SecurityConfig {
                 "status", status.value(),
                 "message", message,
                 "error", status.getReasonPhrase(),
-                "timestamp", Instant.now().toString()
+                "timestamp", Instant.now()
         );
         new ObjectMapper().writeValue(res.getOutputStream(), errorBody);
     }

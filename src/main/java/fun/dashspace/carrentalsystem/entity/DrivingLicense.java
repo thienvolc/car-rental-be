@@ -1,24 +1,25 @@
 package fun.dashspace.carrentalsystem.entity;
 
+import fun.dashspace.carrentalsystem.entity.base.BaseEntity;
+import fun.dashspace.carrentalsystem.enums.VerificationStatus;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 
-import java.time.LocalDateTime;
-
-import fun.dashspace.carrentalsystem.entity.base.BaseEntity;
-import fun.dashspace.carrentalsystem.enums.VerificationStatus;
-import org.springframework.data.annotation.LastModifiedDate;
+import java.time.Instant;
 
 @Entity
-@Table(name = "driving_license")
-@Data
+@Table(name = "driving_licenses")
+@Getter
+@Setter
+@EqualsAndHashCode(callSuper = true, exclude = {"user", "verifiedByUser"})
+@ToString(callSuper = true, exclude = {"user", "verifiedByUser"})
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
-@EqualsAndHashCode(callSuper = true)
+@SuperBuilder
 public class DrivingLicense extends BaseEntity {
 
     @OneToOne(fetch = FetchType.LAZY)
@@ -31,7 +32,7 @@ public class DrivingLicense extends BaseEntity {
     private User verifiedByUser;
 
     @Column(name = "verified_at")
-    private LocalDateTime verifiedAt;
+    private Instant verifiedAt;
 
     @Column(name = "license_number", length = 50, nullable = false, unique = true)
     @NotBlank(message = "License number is required")
@@ -46,7 +47,7 @@ public class DrivingLicense extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     @Builder.Default
-    private VerificationStatus status = VerificationStatus.pending;
+    private VerificationStatus status = VerificationStatus.PENDING;
 
     @Column(name = "license_front_image_url", length = 500, nullable = false)
     @NotBlank(message = "License front image is required")
@@ -59,5 +60,5 @@ public class DrivingLicense extends BaseEntity {
     private String licenseBackImageUrl;
 
     @Column(name = "updated_at", insertable = false, updatable = false)
-    private LocalDateTime updatedAt;
+    private Instant updatedAt;
 }

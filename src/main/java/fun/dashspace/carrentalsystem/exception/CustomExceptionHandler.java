@@ -1,6 +1,6 @@
 package fun.dashspace.carrentalsystem.exception;
 
-import fun.dashspace.carrentalsystem.dto.response.common.ErrorResponse;
+import fun.dashspace.carrentalsystem.dto.common.response.ErrorResponse;
 import fun.dashspace.carrentalsystem.exception.custom.CustomException;
 import io.jsonwebtoken.JwtException;
 import org.springframework.http.HttpStatus;
@@ -10,7 +10,6 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.NoHandlerFoundException;
 
 import java.nio.file.AccessDeniedException;
@@ -18,19 +17,26 @@ import java.nio.file.AccessDeniedException;
 @RestControllerAdvice
 public class CustomExceptionHandler {
 
-    @ExceptionHandler(CustomException.class)
-    public ResponseEntity<ErrorResponse> handleCustomException(CustomException ex, WebRequest req) {
-        return buildErrorResponse(ex.getMessage(), ex.getStatus(), ex.getError());
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponse> handleGlobalException(Exception ex) {
+        return buildErrorResponse(
+                "An unexpected error occurred: " + ex.getMessage(),
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                "Internal Server Error"
+        );
     }
 
     private ResponseEntity<ErrorResponse> buildErrorResponse(String message, HttpStatus status, String error) {
-        var errorRes = ErrorResponse.builder()
-                .success(false)
+        return ResponseEntity.status(status).body(ErrorResponse.builder()
                 .status(status.value())
                 .message(message)
                 .error(error)
-                .build();
-        return new ResponseEntity<>(errorRes, status);
+                .build());
+    }
+
+    @ExceptionHandler(CustomException.class)
+    public ResponseEntity<ErrorResponse> handleCustomException(CustomException ex) {
+        return buildErrorResponse(ex.getMessage(), ex.getStatus(), ex.getError());
     }
 
     @ExceptionHandler(NoHandlerFoundException.class)
@@ -38,8 +44,7 @@ public class CustomExceptionHandler {
         return buildErrorResponse(
                 "The requested resource was not found: " + ex.getRequestURL(),
                 HttpStatus.NOT_FOUND,
-                "Not Found"
-        );
+                "Not Found");
     }
 
     @ExceptionHandler({AuthenticationException.class, BadCredentialsException.class})
@@ -59,19 +64,6 @@ public class CustomExceptionHandler {
 
     @ExceptionHandler(UsernameNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleUsernameNotFoundException(UsernameNotFoundException ex) {
-        return buildErrorResponse(
-                "User not found: " + ex.getMessage(),
-                HttpStatus.NOT_FOUND,
-                "User Not Found"
-        );
-    }
-
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleGlobalException(Exception ex) {
-        return buildErrorResponse(
-                "An unexpected error occurred: " + ex.getMessage(),
-                HttpStatus.INTERNAL_SERVER_ERROR,
-                "Internal Server Error"
-        );
+        return buildErrorResponse("User not found: " + ex.getMessage(), HttpStatus.NOT_FOUND, "User Not Found");
     }
 }

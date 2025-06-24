@@ -1,29 +1,29 @@
 package fun.dashspace.carrentalsystem.entity;
 
-import jakarta.validation.constraints.*;
-import jakarta.persistence.*;
-import lombok.*;
-
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.Set;
-
 import fun.dashspace.carrentalsystem.entity.base.BaseEntity;
 import fun.dashspace.carrentalsystem.enums.ApprovalStatus;
 import fun.dashspace.carrentalsystem.enums.CarStatus;
 import fun.dashspace.carrentalsystem.enums.FuelType;
 import fun.dashspace.carrentalsystem.enums.TransmissionType;
-import org.springframework.data.annotation.LastModifiedDate;
+import jakarta.validation.constraints.*;
+import jakarta.persistence.*;
+import lombok.*;
+import lombok.experimental.SuperBuilder;
+
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
-@Table(name = "car")
-@Data
-@NoArgsConstructor
+@Table(name = "cars")
+@Getter
+@Setter
+@EqualsAndHashCode(callSuper = true, exclude = {"owner", "location", "images", "certificate", "trips"})
+@ToString(callSuper = true, exclude = {"owner", "location", "images", "certificate", "trips"})
 @AllArgsConstructor
-@Builder
-@EqualsAndHashCode(callSuper = true, exclude = {"images", "certificate", "trips"})
-@ToString(exclude = {"images", "certificate", "trips"})
+@NoArgsConstructor
+@SuperBuilder
 public class Car extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -89,16 +89,17 @@ public class Car extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "approval_status", nullable = false)
     @Builder.Default
-    private ApprovalStatus approvalStatus = ApprovalStatus.pending;
+    private ApprovalStatus approvalStatus = ApprovalStatus.PENDING;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     @Builder.Default
-    private CarStatus status = CarStatus.active;
+    private CarStatus status = CarStatus.ACTIVE;
 
     @Column(name = "updated_at", insertable = false, updatable = false)
-    private LocalDateTime updatedAt;
+    private Instant updatedAt;
 
+    // == Relationships ==
     @OneToMany(mappedBy = "car", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @OrderBy("imageOrder ASC")
     @Builder.Default

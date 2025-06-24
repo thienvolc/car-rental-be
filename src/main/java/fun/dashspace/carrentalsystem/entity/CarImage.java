@@ -1,21 +1,22 @@
 package fun.dashspace.carrentalsystem.entity;
 
+import fun.dashspace.carrentalsystem.entity.base.BaseEntity;
 import jakarta.validation.constraints.*;
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 
-import fun.dashspace.carrentalsystem.entity.base.BaseEntity;
-import org.springframework.data.annotation.LastModifiedDate;
-
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Entity
-@Table(name = "car_image")
-@Data
+@Table(name = "car_images")
+@Getter
+@Setter
+@EqualsAndHashCode(callSuper = true, exclude = {"car"})
+@ToString(callSuper = true, exclude = {"car"})
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
-@EqualsAndHashCode(callSuper = true)
+@SuperBuilder
 public class CarImage extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -35,5 +36,5 @@ public class CarImage extends BaseEntity {
     private String imageUrl;
 
     @Column(name = "updated_at", insertable = false, updatable = false)
-    private LocalDateTime updatedAt;
+    private Instant updatedAt;
 }

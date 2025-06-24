@@ -1,24 +1,24 @@
 package fun.dashspace.carrentalsystem.entity;
 
+import fun.dashspace.carrentalsystem.entity.base.BaseEntity;
+import fun.dashspace.carrentalsystem.enums.TripStatus;
 import jakarta.validation.constraints.*;
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
-
-import fun.dashspace.carrentalsystem.entity.base.BaseEntity;
-import fun.dashspace.carrentalsystem.enums.TripStatus;
-import org.springframework.data.annotation.LastModifiedDate;
+import java.time.Instant;
 
 @Entity
-@Table(name = "trip")
-@Data
+@Table(name = "trips")
+@Getter
+@Setter
+@EqualsAndHashCode(callSuper = true, exclude = {"car", "renter", "cancellation"})
+@ToString(callSuper = true, exclude = {"car", "renter", "cancellation"})
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
-@EqualsAndHashCode(callSuper = true, exclude = {"cancellation"})
-@ToString(exclude = {"cancellation"})
+@SuperBuilder
 public class Trip extends BaseEntity {
 
     @Column(name = "trip_code", length = 20, nullable = false, unique = true)
@@ -39,11 +39,11 @@ public class Trip extends BaseEntity {
     @Column(name = "pickup_date", nullable = false)
     @NotNull(message = "Pickup date is required")
     @Future(message = "Pickup date must be in the future")
-    private LocalDateTime pickupDate;
+    private Instant pickupDate;
 
     @Column(name = "return_date", nullable = false)
     @NotNull(message = "Return date is required")
-    private LocalDateTime returnDate;
+    private Instant returnDate;
 
     @Column(name = "total_amount", precision = 12, scale = 2, nullable = false)
     @NotNull(message = "Total amount is required")
@@ -53,16 +53,16 @@ public class Trip extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     @Builder.Default
-    private TripStatus status = TripStatus.pending;
+    private TripStatus status = TripStatus.PENDING;
 
     @Column(name = "approval_time")
-    private LocalDateTime approvalTime;
+    private Instant approvalTime;
 
     @OneToOne(mappedBy = "trip", cascade = CascadeType.ALL)
     private TripCancellation cancellation;
 
     @Column(name = "updated_at", insertable = false, updatable = false)
-    private LocalDateTime updatedAt;
+    private Instant updatedAt;
 
     @PrePersist
     @PreUpdate

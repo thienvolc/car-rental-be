@@ -3,7 +3,6 @@ package fun.dashspace.carrentalsystem.exception.custom.auth;
 import org.springframework.http.HttpStatus;
 
 public class UnauthorizedException extends AuthException {
-
     private static final HttpStatus STATUS = HttpStatus.UNAUTHORIZED;
     private static final String ERROR = "Unauthorized";
 

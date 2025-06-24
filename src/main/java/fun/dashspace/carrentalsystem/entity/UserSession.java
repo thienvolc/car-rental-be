@@ -1,24 +1,30 @@
 package fun.dashspace.carrentalsystem.entity;
 
+import fun.dashspace.carrentalsystem.entity.base.BaseEntity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 
-import java.time.LocalDateTime;
-
-import fun.dashspace.carrentalsystem.entity.base.BaseEntity;
-import org.springframework.data.annotation.LastModifiedDate;
+import java.time.Instant;
 
 @Entity
-@Table(name = "user_session")
-@Data
+@Table(name = "user_sessions")
+@Getter
+@Setter
+@EqualsAndHashCode(callSuper = true, exclude = "user")
+@ToString(callSuper = true, exclude = "user")
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
-@EqualsAndHashCode(callSuper = true)
+@SuperBuilder
 public class UserSession extends BaseEntity {
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    @NotNull(message = "User is required")
+    private User user;
 
     @Column(name = "refresh_token_id", nullable = false, unique = true)
     @NotBlank(message = "Refresh token ID is required")
@@ -35,18 +41,17 @@ public class UserSession extends BaseEntity {
 
     @Column(name = "login_time", nullable = false)
     @Builder.Default
-    private LocalDateTime loginTime = LocalDateTime.now();
+    private Instant loginTime = Instant.now();
 
     @Column(name = "expired_at", nullable = false)
     @NotNull(message = "Expiration time is required")
     @Future(message = "Expiration time must be in the future")
-    private LocalDateTime expiredAt;
+    private Instant expiredAt;
 
     @Column(name = "updated_at", insertable = false, updatable = false)
-    private LocalDateTime updatedAt;
+    private Instant updatedAt;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    @NotNull(message = "User is required")
-    private User user;
+    public boolean isExpired() {
+        return Instant.now().isAfter(expiredAt);
+    }
 }

@@ -1,21 +1,22 @@
 package fun.dashspace.carrentalsystem.entity;
 
+import fun.dashspace.carrentalsystem.entity.base.BaseEntity;
 import jakarta.validation.constraints.*;
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 
-import java.time.LocalDateTime;
-
-import fun.dashspace.carrentalsystem.entity.base.BaseEntity;
-import org.springframework.data.annotation.LastModifiedDate;
+import java.time.Instant;
 
 @Entity
-@Table(name = "trip_cancellation")
-@Data
+@Table(name = "trip_cancellations")
+@Getter
+@Setter
+@EqualsAndHashCode(callSuper = true, exclude = {"trip", "cancelledByUser"})
+@ToString(callSuper = true, exclude = {"trip", "cancelledByUser"})
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
-@EqualsAndHashCode(callSuper = true)
+@SuperBuilder
 public class TripCancellation extends BaseEntity {
 
     @OneToOne(fetch = FetchType.LAZY)
@@ -30,5 +31,5 @@ public class TripCancellation extends BaseEntity {
 
     @Column(name = "cancelled_at", nullable = false)
     @Builder.Default
-    private LocalDateTime cancelledAt = LocalDateTime.now();
+    private Instant cancelledAt = Instant.now();
 }

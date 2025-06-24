@@ -1,25 +1,25 @@
 package fun.dashspace.carrentalsystem.entity;
 
+import fun.dashspace.carrentalsystem.entity.base.BaseEntity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.HashSet;
 import java.util.Set;
 
-import fun.dashspace.carrentalsystem.entity.base.BaseEntity;
-import org.springframework.data.annotation.LastModifiedDate;
-
 @Entity
-@Table(name = "car_location")
-@Data
+@Table(name = "car_locations")
+@Getter
+@Setter
+@EqualsAndHashCode(callSuper = true, exclude = {"user", "cars"})
+@ToString(callSuper = true, exclude = {"user", "cars"})
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
-@EqualsAndHashCode(callSuper = true, exclude = {"cars"})
-@ToString(exclude = {"cars"})
+@SuperBuilder
 public class CarLocation extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -57,8 +57,9 @@ public class CarLocation extends BaseEntity {
     private BigDecimal longitude;
 
     @Column(name = "updated_at", insertable = false, updatable = false)
-    private LocalDateTime updatedAt;
+    private Instant updatedAt;
 
+    // == Relationships ==
     @OneToMany(mappedBy = "location", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @Builder.Default
     private Set<Car> cars = new HashSet<>();

@@ -2,13 +2,15 @@ package fun.dashspace.carrentalsystem.config;
 
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
-import fun.dashspace.carrentalsystem.config.properties.CloudinaryProperties;
+import fun.dashspace.carrentalsystem.config.props.CloudinaryProps;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
+@RequiredArgsConstructor
 public class CloudinaryConfig {
-    private final CloudinaryProperties props = new CloudinaryProperties();
+    private final CloudinaryProps props;
 
     @Bean
     public Cloudinary cloudinary() {
@@ -19,4 +21,3 @@ public class CloudinaryConfig {
                 "secure", true));
     }
 }
-
