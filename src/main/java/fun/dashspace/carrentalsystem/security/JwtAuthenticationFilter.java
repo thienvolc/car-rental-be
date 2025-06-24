@@ -32,7 +32,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             @NonNull HttpServletRequest req,
             @NonNull HttpServletResponse res,
             @NonNull FilterChain filterChain) throws ServletException, IOException {
-        System.out.println("Starting JWT Authentication Filter");
         if (!isPublicPath(req)) {
             String accessToken = extractToken(req);
             System.out.println("Access Token: " + accessToken);

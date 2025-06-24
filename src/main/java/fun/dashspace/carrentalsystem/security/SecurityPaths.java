@@ -12,8 +12,9 @@ public class SecurityPaths {
             "/auth/registration/email/verify",
             "/auth/renter/register",
             "/auth/password/forgot",
-            "/auth/password/verify-reset-otp",
+            "/auth/password/forgot/otp/verify",
             "/auth/password/reset",
+            "/auth/otp/resend",
 
             "/cars/search",
 

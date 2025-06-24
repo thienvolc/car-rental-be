@@ -115,7 +115,6 @@ public class SecurityConfig {
         res.setStatus(status.value());
         res.setContentType(MediaType.APPLICATION_JSON_VALUE);
         var errorBody = Map.of(
-                "success", false,
                 "status", status.value(),
                 "message", message,
                 "error", status.getReasonPhrase(),

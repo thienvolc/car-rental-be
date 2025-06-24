@@ -150,7 +150,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public void verifyResetOtp(VerifyResetOtpRequest req) {
+    public void verifyResetOtp(VerifyOtpRequest req) {
         otpRequestService.verifyForgotPasswordOtp(req.getEmail(), req.getOtpCode());
     }
 

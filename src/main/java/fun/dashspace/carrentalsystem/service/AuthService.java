@@ -21,7 +21,7 @@ public interface AuthService {
 
     void forgotPassword(String email);
 
-    void verifyResetOtp(VerifyResetOtpRequest req);
+    void verifyResetOtp(VerifyOtpRequest req);
 
     void resetPassword(ResetPasswordRequest req);
 }
