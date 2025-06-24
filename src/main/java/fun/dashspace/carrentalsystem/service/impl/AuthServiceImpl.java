@@ -100,15 +100,11 @@ public class AuthServiceImpl implements AuthService {
     public RefreshTokenResponse refreshToken(String refreshToken) {
         var user = userService.getUserByIdOrThrow(jwtService.extractUserId(refreshToken));
         var userDetails = new CustomUserDetails(user);
-        try {
-            TokenPair tokens = tokenService.generateTokenPair(userDetails);
-            var newRefreshTokenId = jwtService.extractTokenId(tokens.refreshToken());
-            var oldRefreshTokenId = jwtService.extractTokenId(refreshToken);
-            userSessionService.refreshUserSession(userDetails.getId(), oldRefreshTokenId, newRefreshTokenId);
-            return buildRefreshTokenResponse(userDetails, tokens);
-        } catch (Exception e) {
-            throw new BadRequestException("Refreshing token error: " + e.getMessage());
-        }
+        TokenPair tokens = tokenService.generateTokenPair(userDetails);
+        var newRefreshTokenId = jwtService.extractTokenId(tokens.refreshToken());
+        var oldRefreshTokenId = jwtService.extractTokenId(refreshToken);
+        userSessionService.refreshUserSession(userDetails.getId(), oldRefreshTokenId, newRefreshTokenId);
+        return buildRefreshTokenResponse(userDetails, tokens);
     }
 
 
