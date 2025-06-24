@@ -145,6 +145,7 @@ public class OtpRequestServiceImpl implements OtpRequestService {
         switch (type) {
             case REGISTRATION -> sendRegistrationOtp(email);
             case FORGOT_PASSWORD -> sendForgotPasswordOtp(email);
+            case HOST_REGISTRATION -> sendHostRegistrationEmailOtp(email);
             default -> throw new BadRequestException("Unsupported OTP request type: " + type);
         }
     }
@@ -154,5 +155,22 @@ public class OtpRequestServiceImpl implements OtpRequestService {
     @Transactional
     public void cleanupExpiredOtpRequests() {
         otpRequestRepo.deleteAllByExpiredAtAfter(Instant.now());
+    }
+
+    @Override
+    public void sendHostRegistrationEmailOtp(String email) {
+        var otpRequest = refreshPendingOtpRequest(email, OtpRequestType.HOST_REGISTRATION);
+        notificationService.sendHostRegistrationOtp(email, otpRequest.getCode());
+    }
+
+    @Override
+    public void verifyHostRegistrationOtp(String email, String otpCode) {
+        verifyOtp(email, otpCode, OtpRequestType.HOST_REGISTRATION);
+    }
+
+    @Override
+    public void validateHostRegistrationEmailVerified(String email) {
+        getActiveVerifiedOtpRequestsWithinType(email, OtpRequestType.HOST_REGISTRATION)
+                .orElseThrow(() -> new EmailNotVerifiedException(email));
     }
 }

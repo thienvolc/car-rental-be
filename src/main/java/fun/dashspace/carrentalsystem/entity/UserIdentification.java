@@ -69,4 +69,8 @@ public class UserIdentification extends BaseEntity {
 
     @Column(name = "updated_at", insertable = false, updatable = false)
     private Instant updatedAt;
+
+    public boolean isVerified() {
+        return VerificationStatus.VERIFIED.equals(status);
+    }
 }

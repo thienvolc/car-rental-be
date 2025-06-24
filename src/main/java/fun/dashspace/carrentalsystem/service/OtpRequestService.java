@@ -17,4 +17,10 @@ public interface OtpRequestService {
     void verifyForgotPasswordOtp(String email, String otp);
 
     void validateForgotPasswordVerified(String email);
+
+    void sendHostRegistrationEmailOtp(String email);
+
+    void verifyHostRegistrationOtp(String email, String otpCode);
+
+    void validateHostRegistrationEmailVerified(String email);
 }

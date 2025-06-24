@@ -1,5 +1,6 @@
 package fun.dashspace.carrentalsystem.service.impl;
 
+import fun.dashspace.carrentalsystem.dto.HostRegistrationEmailRequest;
 import fun.dashspace.carrentalsystem.dto.auth.*;
 import fun.dashspace.carrentalsystem.dto.auth.request.*;
 import fun.dashspace.carrentalsystem.dto.auth.response.LoginResponse;
@@ -28,6 +29,7 @@ public class AuthServiceImpl implements AuthService {
     private final AuthenticationManager authenticationManager;
     private final UserFactory userFactory;
     private final UserService userService;
+    private final UserIdentificationService userIdentificationService;
 
     @Override
     public void sendRegistrationEmailOtp(RegistrationEmailRequest req) {
@@ -36,7 +38,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     private void validateEmailNotExists(String email) {
-        if (userRepo.existsByEmail(email))
+        if (userService.isEmailInUse(email))
             throw new BadRequestException("Email already exists: " + email);
     }
 
@@ -159,5 +161,28 @@ public class AuthServiceImpl implements AuthService {
         validateEmailExists(req.getEmail());
         otpRequestService.validateForgotPasswordVerified(req.getEmail());
         userService.resetPassword(req.getEmail(), req.getNewPassword());
+    }
+
+    @Override
+    public void sendHostRegistrationEmailOtp(HostRegistrationEmailRequest req) {
+        validateEmailForHostRegistration(req.getEmail(), req.getUserId());
+        otpRequestService.sendHostRegistrationEmailOtp(req.getEmail());
+    }
+
+    private void validateEmailForHostRegistration(String email, Integer userId) {
+        if (!userService.isEmailValidForNewUserIdentification(email, userId))
+            throw new BadRequestException("Email is already in use or invalid for host registration.");
+    }
+
+    @Override
+    public void verifyHostRegistraionEmailOtp(VerifyOtpRequest req) {
+        otpRequestService.verifyHostRegistrationOtp(req.getEmail(), req.getOtpCode());
+    }
+
+    @Override
+    public void registerHost(HostRegistrationRequest req) {
+        validateEmailForHostRegistration(req.getEmail(), req.getUserId());
+        otpRequestService.validateHostRegistrationEmailVerified(req.getEmail());
+        userIdentificationService.createUserIdentification(req);
     }
 }

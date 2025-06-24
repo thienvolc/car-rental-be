@@ -3,11 +3,14 @@ package fun.dashspace.carrentalsystem.service.impl;
 import fun.dashspace.carrentalsystem.entity.User;
 import fun.dashspace.carrentalsystem.exception.custom.resource.UserNotFoundException;
 import fun.dashspace.carrentalsystem.repository.UserRepo;
+import fun.dashspace.carrentalsystem.service.UserIdentificationService;
 import fun.dashspace.carrentalsystem.service.UserService;
 import fun.dashspace.carrentalsystem.util.UsernameUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -15,10 +18,24 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepo userRepo;
     private final PasswordEncoder passwordEncoder;
+    private final UserIdentificationService userIdentificationService;
 
     @Override
-    public boolean existsByEmail(String email) {
-        return userRepo.findByEmail(email).isPresent();
+    public boolean isEmailInUse(String email) {
+        return userRepo.existsByEmail(email) || userIdentificationService.isHostEmailUsed(email);
+    }
+
+    @Override
+    public boolean isEmailValidForNewUserIdentification(String email, Integer userId) {
+        if (userIdentificationService.isHostEmailUsed(email))
+            return false;
+        return !isEmailUsedByOtherUser(email, userId);
+    }
+
+    private boolean isEmailUsedByOtherUser(String email, Integer userId) {
+        return getUserByEmail(email)
+                .map(value -> !value.getId().equals(userId))
+                .orElse(false);
     }
 
     public User createUser(String email, String password) {
@@ -51,5 +68,10 @@ public class UserServiceImpl implements UserService {
         var user = getUserByEmailOrThrow(email);
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepo.save(user);
+    }
+
+    @Override
+    public Optional<User> getUserByEmail(String email) {
+        return userRepo.findByEmail(email);
     }
 }

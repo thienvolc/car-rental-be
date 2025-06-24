@@ -1,5 +1,7 @@
 package fun.dashspace.carrentalsystem.controller;
 
+import fun.dashspace.carrentalsystem.dto.HostRegistrationEmailRequest;
+import fun.dashspace.carrentalsystem.dto.auth.HostRegistrationRequest;
 import fun.dashspace.carrentalsystem.dto.auth.request.*;
 import fun.dashspace.carrentalsystem.dto.auth.response.LoginResponse;
 import fun.dashspace.carrentalsystem.dto.auth.response.RefreshTokenResponse;
@@ -9,9 +11,11 @@ import fun.dashspace.carrentalsystem.service.AuthService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/auth")
@@ -96,5 +100,33 @@ public class AuthController {
     public ResponseEntity<ApiResponse<String>> resetPassword(@RequestBody ResetPasswordRequest req) {
         authService.resetPassword(req);
         return ResponseEntity.ok(ApiResponse.ok("Password reset completed"));
+    }
+
+    @PostMapping("/host/registration/email")
+    public ResponseEntity<ApiResponse<String>> sendHostRegistrationEmailOtp(
+            @RequestBody HostRegistrationEmailRequest req,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        req.setUserId(userDetails.getId());
+        authService.sendHostRegistrationEmailOtp(req);
+        return ResponseEntity.ok(ApiResponse.ok("Host email verification OTP sent successfully"));
+    }
+
+    @PostMapping("/host/registration/email/verify")
+    public ResponseEntity<ApiResponse<String>> verifyHostRegistraionEmailOtp(@RequestBody VerifyOtpRequest req) {
+        authService.verifyHostRegistraionEmailOtp(req);
+        return ResponseEntity.ok(ApiResponse.ok("Host email verified successfully"));
+    }
+
+    @PostMapping(path = "/host/register", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
+    public ResponseEntity<ApiResponse<String>> registerHost(
+            @RequestPart("nationalIdFrontImage") MultipartFile nationalIdFrontImage,
+            @RequestPart("selfieWithNationalIdImage") MultipartFile selfieWithNationalIdImage,
+            @RequestPart("request") HostRegistrationRequest req,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        req.setNationalIdFrontImage(nationalIdFrontImage);
+        req.setSelfieWithNationalIdImage(selfieWithNationalIdImage);
+        req.setUserId(userDetails.getId());
+        authService.registerHost(req);
+        return ResponseEntity.ok(ApiResponse.ok("Host registration initiated successfully"));
     }
 }

@@ -1,5 +1,7 @@
 package fun.dashspace.carrentalsystem.service;
 
+import fun.dashspace.carrentalsystem.dto.HostRegistrationEmailRequest;
+import fun.dashspace.carrentalsystem.dto.auth.HostRegistrationRequest;
 import fun.dashspace.carrentalsystem.dto.auth.request.*;
 import fun.dashspace.carrentalsystem.dto.auth.response.LoginResponse;
 import fun.dashspace.carrentalsystem.dto.auth.response.RefreshTokenResponse;
@@ -24,4 +26,10 @@ public interface AuthService {
     void verifyResetOtp(VerifyOtpRequest req);
 
     void resetPassword(ResetPasswordRequest req);
+
+    void registerHost(HostRegistrationRequest req);
+
+    void sendHostRegistrationEmailOtp(HostRegistrationEmailRequest req);
+
+    void verifyHostRegistraionEmailOtp(VerifyOtpRequest req);
 }

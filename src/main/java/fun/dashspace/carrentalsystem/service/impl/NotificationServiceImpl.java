@@ -49,6 +49,25 @@ public class NotificationServiceImpl implements NotificationService {
         sendSimpleEmail(email, subject, content);
     }
 
+    @Override
+    public void sendHostRegistrationOtp(String email, String otpCode) {
+        String subject = "DashSpace - Host Registration OTP";
+        String content = String.format("""
+                Welcome to DashSpace Host Registration!
+                
+                Your registration OTP code is: %s
+                
+                This code will expire in 5 minutes.
+                
+                If you didn't request this, please ignore this email.
+                
+                Best regards,
+                DashSpace Team
+                """, otpCode);
+
+        sendSimpleEmail(email, subject, content);
+    }
+
     private void sendSimpleEmail(String to, String subject, String content) {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setTo(to);

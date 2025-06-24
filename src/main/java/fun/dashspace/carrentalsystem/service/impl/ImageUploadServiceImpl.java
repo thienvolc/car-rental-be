@@ -18,9 +18,9 @@ public class ImageUploadServiceImpl implements ImageUploadService {
     private final CloudinaryAdapter cloudinaryAdapter;
 
     @Override
-    public FileUpLoadResponse uploadFile(MultipartFile file, String folder) {
+    public FileUpLoadResponse uploadFile(MultipartFile file) {
         try {
-            Map<?, ?> result = cloudinaryAdapter.uploadImage(file, folder);
+            Map<?, ?> result = cloudinaryAdapter.uploadImage(file);
             return buildFileUploadResponse(result);
         } catch (IOException ex) {
             throw new FileUploadFailedException(ex.getMessage());
@@ -35,8 +35,8 @@ public class ImageUploadServiceImpl implements ImageUploadService {
     }
 
     @Override
-    public List<FileUpLoadResponse> uploadFiles(List<MultipartFile> files, String folder) {
-        var result = files.stream().map(file -> uploadFile(file, folder));
+    public List<FileUpLoadResponse> uploadFiles(List<MultipartFile> files) {
+        var result = files.stream().map(this::uploadFile);
         return result.toList();
     }
 

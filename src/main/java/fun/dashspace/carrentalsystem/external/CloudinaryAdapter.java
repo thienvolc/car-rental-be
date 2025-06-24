@@ -15,13 +15,13 @@ import java.util.Map;
 public class CloudinaryAdapter {
     private final Cloudinary cloudinary;
 
-    public Map<?, ?> uploadImage(MultipartFile file, String folder) throws IOException {
-        Map<?, ?> options = createUploadOptions(folder);
+    public Map<?, ?> uploadImage(MultipartFile file) throws IOException {
+        Map<?, ?> options = createUploadOptions();
         return cloudinary.uploader().upload(file.getBytes(), options);
     }
 
-    private Map<?, ?> createUploadOptions(String folder) {
-        return ObjectUtils.asMap("folder", folder, "resource_type", "auto", "unique_filename", true);
+    private Map<?, ?> createUploadOptions() {
+        return ObjectUtils.asMap("resource_type", "auto", "unique_filename", true);
     }
 
     public void deleteImage(String imageurl) {
