@@ -50,7 +50,6 @@ public class UserSessionServiceImpl implements UserSessionService {
     }
 
     private UserSession buildUserSession(CreateUserSessionRequest req, User user) {
-        System.out.println(req.getDeviceInfo() + " " +  req.getIpAddress() + " " +req.getUserAgent());
         return UserSession.builder()
                 .user(user)
                 .refreshTokenId(req.getRefreshTokenId())
@@ -95,6 +94,6 @@ public class UserSessionServiceImpl implements UserSessionService {
     @Transactional
     @Scheduled(fixedRate = EXPIRATION_CLEANUP_INTERVAL)
     public void cleanupExpiredSessions() {
-        userSessionRepo.deleteAllByExpiredAtAfter(Instant.now());
+        userSessionRepo.deleteAllByExpiredAtBefore(Instant.now());
     }
 }

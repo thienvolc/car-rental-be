@@ -280,3 +280,11 @@ INSERT INTO roles (name, description)
 VALUES ('ADMIN', 'Administrator with full access'),
        ('HOST', 'Car owner who can manage their own cars'),
        ('RENTER', 'User who can rent cars');
+
+
+-- passwrod: Thien123456
+INSERT INTO  users (email, password, username, status)
+VALUES ('thienvolc@gmail.com', '$2a$10$DMDGPmWAKn/js5uv.2OivuISa5oOdT68vEr/gEGYPEcWDGF4O7SUO', 'thiendeptraivocung', 'ACTIVE');
+
+INSERT INTO user_roles (user_id, role_id)
+VALUES ((SELECT id FROM users WHERE email = 'thienvolc@gmail.com'), (SELECT id FROM roles WHERE name = 'ADMIN'));

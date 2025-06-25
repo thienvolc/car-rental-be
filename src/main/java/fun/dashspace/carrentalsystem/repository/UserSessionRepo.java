@@ -16,5 +16,5 @@ public interface UserSessionRepo extends JpaRepository<UserSession, Integer> {
     void deleteByUserIdAndRefreshTokenId(Integer userId, String refreshTokenId);
     void deleteAllByUserId(Integer userId);
 
-    void deleteAllByExpiredAtAfter(Instant expiredAt);
+    void deleteAllByExpiredAtBefore(Instant now);
 }

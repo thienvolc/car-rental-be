@@ -27,7 +27,7 @@ public class JwtProps {
     @PostConstruct
     private void adaptProperties() {
         this.key = Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
-        this.tokenExpiry = Duration.ofSeconds(expiration);
-        this.refreshTokenExpiry = Duration.ofSeconds(refreshExpiration);
+        this.tokenExpiry = Duration.ofMillis(expiration);
+        this.refreshTokenExpiry = Duration.ofMillis(refreshExpiration);
     }
 }

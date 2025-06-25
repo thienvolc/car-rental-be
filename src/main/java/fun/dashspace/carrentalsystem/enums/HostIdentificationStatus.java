@@ -1,5 +1,5 @@
 package fun.dashspace.carrentalsystem.enums;
 
-public enum VerificationStatus {
+public enum HostIdentificationStatus {
     PENDING, VERIFIED, REJECTED
 }

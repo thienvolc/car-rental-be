@@ -1,7 +1,7 @@
 package fun.dashspace.carrentalsystem.entity;
 
 import fun.dashspace.carrentalsystem.entity.base.BaseEntity;
-import fun.dashspace.carrentalsystem.enums.VerificationStatus;
+import fun.dashspace.carrentalsystem.enums.HostIdentificationStatus;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -47,7 +47,7 @@ public class DrivingLicense extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     @Builder.Default
-    private VerificationStatus status = VerificationStatus.PENDING;
+    private HostIdentificationStatus status = HostIdentificationStatus.PENDING;
 
     @Column(name = "license_front_image_url", length = 500, nullable = false)
     @NotBlank(message = "License front image is required")

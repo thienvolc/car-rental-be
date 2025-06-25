@@ -1,7 +1,8 @@
 package fun.dashspace.carrentalsystem.security;
 
 public class SecurityPaths {
-    private SecurityPaths() {}
+    private SecurityPaths() {
+    }
 
     public static final String[] PUBLIC_PATHS = {
             "/locations/**",
@@ -27,6 +28,8 @@ public class SecurityPaths {
             "/auth/logout/all",
             "/users/account/**",
             "/users/bookings/**",
+            "/auth/host/**",
+            "/hosts/registration/info",
             "/profile/**",
     };
 
@@ -37,6 +40,7 @@ public class SecurityPaths {
     };
 
     public static final String[] ADMIN_PATHS = {
+            "/hosts/registration/review",
             "/admin/**",
             "/users/all",
             "/reports/**",

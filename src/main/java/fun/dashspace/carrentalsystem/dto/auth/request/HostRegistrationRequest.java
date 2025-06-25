@@ -1,4 +1,4 @@
-package fun.dashspace.carrentalsystem.dto.auth;
+package fun.dashspace.carrentalsystem.dto.auth.request;
 
 import lombok.Getter;
 import lombok.Setter;

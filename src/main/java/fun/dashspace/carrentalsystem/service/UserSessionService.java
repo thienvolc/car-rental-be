@@ -12,5 +12,4 @@ public interface UserSessionService {
     void invalidateAllSessions(Integer userId);
 
     void cleanupExpiredSessions();
-
 }

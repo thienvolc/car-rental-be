@@ -154,7 +154,7 @@ public class OtpRequestServiceImpl implements OtpRequestService {
     @Scheduled(fixedRate = EXPIRATION_CLEANUP_INTERVAL)
     @Transactional
     public void cleanupExpiredOtpRequests() {
-        otpRequestRepo.deleteAllByExpiredAtAfter(Instant.now());
+        otpRequestRepo.deleteAllByExpiredAtBefore(Instant.now());
     }
 
     @Override

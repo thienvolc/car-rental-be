@@ -1,7 +1,7 @@
 package fun.dashspace.carrentalsystem.controller;
 
 import fun.dashspace.carrentalsystem.dto.HostRegistrationEmailRequest;
-import fun.dashspace.carrentalsystem.dto.auth.HostRegistrationRequest;
+import fun.dashspace.carrentalsystem.dto.auth.request.HostRegistrationRequest;
 import fun.dashspace.carrentalsystem.dto.auth.request.*;
 import fun.dashspace.carrentalsystem.dto.auth.response.LoginResponse;
 import fun.dashspace.carrentalsystem.dto.auth.response.RefreshTokenResponse;
@@ -63,7 +63,6 @@ public class AuthController {
         req.setDeviceInfo(String.format("IP: %s | Agent: %s", ipAddress, userAgent));
     }
 
-
     @PostMapping("/token/refresh")
     public ResponseEntity<ApiResponse<RefreshTokenResponse>> refreshToken(@RequestBody RefreshTokenRequest req) {
         RefreshTokenResponse res = authService.refreshToken(req.getRefreshToken());
@@ -83,7 +82,6 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponse.ok("Logout from all devices successful"));
     }
 
-    //
     @PostMapping("/password/forgot")
     public ResponseEntity<ApiResponse<String>> forgotPassword(@RequestBody ForgotPasswordRequest req) {
         authService.forgotPassword(req.getEmail());
@@ -102,7 +100,7 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponse.ok("Password reset completed"));
     }
 
-    @PostMapping("/host/registration/email")
+    @PostMapping("/hosts/registration/email")
     public ResponseEntity<ApiResponse<String>> sendHostRegistrationEmailOtp(
             @RequestBody HostRegistrationEmailRequest req,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
@@ -111,13 +109,13 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponse.ok("Host email verification OTP sent successfully"));
     }
 
-    @PostMapping("/host/registration/email/verify")
+    @PostMapping("/hosts/registration/email/verify")
     public ResponseEntity<ApiResponse<String>> verifyHostRegistraionEmailOtp(@RequestBody VerifyOtpRequest req) {
         authService.verifyHostRegistraionEmailOtp(req);
         return ResponseEntity.ok(ApiResponse.ok("Host email verified successfully"));
     }
 
-    @PostMapping(path = "/host/register", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
+    @PostMapping(path = "/hosts/register", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     public ResponseEntity<ApiResponse<String>> registerHost(
             @RequestPart("nationalIdFrontImage") MultipartFile nationalIdFrontImage,
             @RequestPart("selfieWithNationalIdImage") MultipartFile selfieWithNationalIdImage,

@@ -18,5 +18,5 @@ public interface OtpRequestRepo extends JpaRepository<OtpRequest, Integer> {
     List<OtpRequest> findAllByEmailAndRequestTypeAndStatusAndExpiredAtAfter(
             String email, OtpRequestType type, OtpStatus otpStatus, Instant now);
 
-    void deleteAllByExpiredAtAfter(Instant now);
+    void deleteAllByExpiredAtBefore(Instant now);
 }

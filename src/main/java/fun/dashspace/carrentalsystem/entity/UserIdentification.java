@@ -1,7 +1,7 @@
 package fun.dashspace.carrentalsystem.entity;
 
 import fun.dashspace.carrentalsystem.entity.base.BaseEntity;
-import fun.dashspace.carrentalsystem.enums.VerificationStatus;
+import fun.dashspace.carrentalsystem.enums.HostIdentificationStatus;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
@@ -65,12 +65,12 @@ public class UserIdentification extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     @Builder.Default
-    private VerificationStatus status = VerificationStatus.PENDING;
+    private HostIdentificationStatus status = HostIdentificationStatus.PENDING;
 
     @Column(name = "updated_at", insertable = false, updatable = false)
     private Instant updatedAt;
 
     public boolean isVerified() {
-        return VerificationStatus.VERIFIED.equals(status);
+        return HostIdentificationStatus.VERIFIED.equals(status);
     }
 }
