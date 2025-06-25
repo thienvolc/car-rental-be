@@ -32,13 +32,20 @@ public class UserIdentificationServiceImpl implements UserIdentificationService 
     @Override
     public void createUserIdentification(HostRegistrationRequest req) {
         var userIdentification = toUserIdentification(req);
-        userIdentification.setNationalIdFrontImageUrl(createImageUrl(req.getNationalIdFrontImage()));
-        userIdentification.setSelfieWithNationalIdImageUrl(createImageUrl(req.getSelfieWithNationalIdImage()));
+        uploadAndSetImages(req, userIdentification);
         userIdentificationRepo.save(userIdentification);
     }
 
-    private String createImageUrl(MultipartFile file) {
-        return imageUploadService.uploadFile(file).getSecureUrl();
+    private void uploadAndSetImages(HostRegistrationRequest req, UserIdentification userIdentification) {
+        var nationalIdFrontImageUrl = uploadImage(req.getNationalIdFrontImage());
+        var selfieWithNationalIdImageUrl = uploadImage(req.getSelfieWithNationalIdImage());
+
+        userIdentification.setNationalIdFrontImageUrl(nationalIdFrontImageUrl);
+        userIdentification.setSelfieWithNationalIdImageUrl(selfieWithNationalIdImageUrl);
+    }
+
+    private String uploadImage(MultipartFile image) {
+        return imageUploadService.uploadFile(image).getSecureUrl();
     }
 
     private UserIdentification toUserIdentification(HostRegistrationRequest req) {
@@ -59,7 +66,7 @@ public class UserIdentificationServiceImpl implements UserIdentificationService 
     }
 
     private Optional<UserIdentification> getCurrentUserIdentification() {
-        return userIdentificationRepo.findByUser(authenticateFacade.getCurrentUserDetails().user());
+        return userIdentificationRepo.findByUser(authenticateFacade.getCurrentUser());
     }
 
     private GetHostIdentificationInfoResponse toSearchHostIdentification(UserIdentification userIdentification) {
@@ -74,7 +81,7 @@ public class UserIdentificationServiceImpl implements UserIdentificationService 
     public void updateHostIdentificationStatus(ReviewHostIdentificationRequest req) {
         var userIdentification = getUserIdentificationByHost(req.getHostId());
         userIdentification.setStatus(req.getStatus());
-        userIdentification.setVerifiedByUser(authenticateFacade.getCurrentUserDetails().user());
+        userIdentification.setVerifiedByUser(authenticateFacade.getCurrentUser());
         userIdentification.setVerifiedAt(Instant.now());
         userIdentificationRepo.save(userIdentification);
     }

@@ -1,5 +1,6 @@
 package fun.dashspace.carrentalsystem.security;
 
+import fun.dashspace.carrentalsystem.entity.User;
 import fun.dashspace.carrentalsystem.exception.custom.auth.UnauthorizedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -16,6 +17,10 @@ public class AuthenticateFacade {
                 .map(Authentication::getPrincipal)
                 .map(CustomUserDetails.class::cast)
                 .orElseThrow(() -> new UnauthorizedException("User is not authenticated"));
+    }
+
+    public User getCurrentUser() {
+        return getCurrentUserDetails().user();
     }
 
     private boolean isAuthenticated(Authentication auth) {

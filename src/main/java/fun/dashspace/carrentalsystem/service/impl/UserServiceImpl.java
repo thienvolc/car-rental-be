@@ -1,14 +1,20 @@
 package fun.dashspace.carrentalsystem.service.impl;
 
+import fun.dashspace.carrentalsystem.dto.user.GetUserProfileResponse;
+import fun.dashspace.carrentalsystem.dto.user.UpdateUserProfileRequest;
 import fun.dashspace.carrentalsystem.entity.User;
 import fun.dashspace.carrentalsystem.exception.custom.resource.UserNotFoundException;
 import fun.dashspace.carrentalsystem.repository.UserRepo;
+import fun.dashspace.carrentalsystem.security.AuthenticateFacade;
+import fun.dashspace.carrentalsystem.service.ImageUploadService;
 import fun.dashspace.carrentalsystem.service.UserIdentificationService;
 import fun.dashspace.carrentalsystem.service.UserService;
 import fun.dashspace.carrentalsystem.util.UsernameUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Optional;
 
@@ -19,6 +25,8 @@ public class UserServiceImpl implements UserService {
     private final UserRepo userRepo;
     private final PasswordEncoder passwordEncoder;
     private final UserIdentificationService userIdentificationService;
+    private final AuthenticateFacade authenticateFacade;
+    private final ImageUploadService imageUploadService;
 
     @Override
     public boolean isEmailInUse(String email) {
@@ -73,5 +81,56 @@ public class UserServiceImpl implements UserService {
     @Override
     public Optional<User> getUserByEmail(String email) {
         return userRepo.findByEmail(email);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public GetUserProfileResponse getCurrentUserInfo() {
+        var user = authenticateFacade.getCurrentUser();
+        return toUserDto(user);
+    }
+
+    private GetUserProfileResponse toUserDto(User user) {
+        return GetUserProfileResponse.builder()
+                .email(user.getEmail())
+                .username(user.getUsername())
+                .phoneNumber(user.getPhoneNumber())
+                .avatarUrl(user.getAvatarUrl())
+                .dateOfBirth(user.getDateOfBirth())
+                .gender(user.getGender())
+                .build();
+    }
+
+    @Override
+    public void updateCurrentUserInfo(UpdateUserProfileRequest req) {
+        var user = authenticateFacade.getCurrentUser();
+        detachUserFromDto(user, req);
+        userRepo.save(user);
+    }
+
+    private void detachUserFromDto(User user, UpdateUserProfileRequest getUserProfileResponse) {
+        if (getUserProfileResponse.getUsername() != null)
+            user.setUsername(getUserProfileResponse.getUsername());
+
+        if (getUserProfileResponse.getPhoneNumber() != null)
+            user.setPhoneNumber(getUserProfileResponse.getPhoneNumber());
+
+        if (getUserProfileResponse.getDateOfBirth() != null)
+            user.setDateOfBirth(getUserProfileResponse.getDateOfBirth());
+
+        if (getUserProfileResponse.getGender() != null)
+            user.setGender(getUserProfileResponse.getGender());
+    }
+
+    @Override
+    public void updateUserProfileAvatar(MultipartFile avatarImage) {
+        var user = authenticateFacade.getCurrentUser();
+        var imageUrl = uploadImage(avatarImage);
+        user.setAvatarUrl(imageUrl);
+        userRepo.save(user);
+    }
+
+    private String uploadImage(MultipartFile image) {
+        return imageUploadService.uploadFile(image).getSecureUrl();
     }
 }

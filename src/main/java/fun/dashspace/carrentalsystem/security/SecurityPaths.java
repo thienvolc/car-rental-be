@@ -26,11 +26,10 @@ public class SecurityPaths {
     public static final String[] USER_PATHS = {
             "/auth/logout",
             "/auth/logout/all",
-            "/users/account/**",
             "/users/bookings/**",
             "/auth/host/**",
             "/hosts/registration/info",
-            "/profile/**",
+            "/users/profile/**",
     };
 
     public static final String[] HOST_PATHS = {
