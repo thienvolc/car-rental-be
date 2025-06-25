@@ -1,4 +1,4 @@
-package fun.dashspace.carrentalsystem.dto;
+package fun.dashspace.carrentalsystem.dto.host;
 
 import lombok.Getter;
 import lombok.Setter;

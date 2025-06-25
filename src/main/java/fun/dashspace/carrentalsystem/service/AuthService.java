@@ -1,6 +1,6 @@
 package fun.dashspace.carrentalsystem.service;
 
-import fun.dashspace.carrentalsystem.dto.HostRegistrationEmailRequest;
+import fun.dashspace.carrentalsystem.dto.host.HostRegistrationEmailRequest;
 import fun.dashspace.carrentalsystem.dto.auth.request.HostRegistrationRequest;
 import fun.dashspace.carrentalsystem.dto.auth.request.*;
 import fun.dashspace.carrentalsystem.dto.auth.response.LoginResponse;

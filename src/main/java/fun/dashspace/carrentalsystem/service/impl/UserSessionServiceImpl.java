@@ -74,7 +74,6 @@ public class UserSessionServiceImpl implements UserSessionService {
                 .orElseThrow(() -> new ResourceNotFoundException("Session not found for user with ID: " + userId));
     }
 
-
     private void verifySessionNotExpired(UserSession session) {
         if (session.isExpired())
             throw new UserSessionExpiredException("User session has expired");

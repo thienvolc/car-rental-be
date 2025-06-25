@@ -1,5 +1,6 @@
 package fun.dashspace.carrentalsystem.service.impl;
 
+import fun.dashspace.carrentalsystem.dto.user.CreateDrivingLicenseRequest;
 import fun.dashspace.carrentalsystem.dto.user.GetUserProfileResponse;
 import fun.dashspace.carrentalsystem.dto.user.UpdateUserProfileRequest;
 import fun.dashspace.carrentalsystem.entity.User;
@@ -10,7 +11,6 @@ import fun.dashspace.carrentalsystem.service.ImageUploadService;
 import fun.dashspace.carrentalsystem.service.UserIdentificationService;
 import fun.dashspace.carrentalsystem.service.UserService;
 import fun.dashspace.carrentalsystem.util.UsernameUtils;
-import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -127,8 +127,7 @@ public class UserServiceImpl implements UserService {
     public void updateUserProfileAvatar(MultipartFile avatarImage) {
         var user = authenticateFacade.getCurrentUser();
         deleteOldImageIfExists(user.getAvatarUrl());
-        var imageUrl = uploadImage(avatarImage);
-        user.setAvatarUrl(imageUrl);
+        user.setAvatarUrl(uploadImage(avatarImage));
         userRepo.save(user);
     }
 

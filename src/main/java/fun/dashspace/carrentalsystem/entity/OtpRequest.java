@@ -54,4 +54,18 @@ public class OtpRequest extends BaseEntity {
     public boolean isExpired() {
         return Instant.now().isAfter(expiredAt);
     }
+
+    public void markAsCancelled() {
+        if (OtpStatus.PENDING.equals(status))
+            status = OtpStatus.CANCELLED;
+    }
+
+    public void markAsVerified() {
+        if (OtpStatus.PENDING.equals(status) && !isExpired())
+            status = OtpStatus.VERIFIED;
+    }
+
+    public void markAsExpired() {
+        status = OtpStatus.EXPIRED;
+    }
 }

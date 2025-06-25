@@ -41,16 +41,12 @@ public class OtpRequestServiceImpl implements OtpRequestService {
 
     public void invalidateExistingPendingOtps(String email, OtpRequestType type) {
         List<OtpRequest> pendingOtps = getExpiredPendingOtpRequests(email, type);
-        pendingOtps.forEach(this::markOtpAsCancelled);
+        pendingOtps.forEach(OtpRequest::markAsCancelled);
     }
 
     private List<OtpRequest> getExpiredPendingOtpRequests(String email, OtpRequestType type) {
         return otpRequestRepo.findAllByEmailAndRequestTypeAndStatusAndExpiredAtAfter(
                 email, type, OtpStatus.PENDING, Instant.now());
-    }
-
-    private void markOtpAsCancelled(OtpRequest otpRequest) {
-        updateOtpAsStatus(otpRequest, OtpStatus.CANCELLED);
     }
 
     private OtpRequest createOtpRequest(String email, OtpRequestType type) {
@@ -94,7 +90,7 @@ public class OtpRequestServiceImpl implements OtpRequestService {
     private void verifyOtp(String email, String code, OtpRequestType type) {
         OtpRequest otpRequest = getPendingOtpRequestOrThrow(email, code, type);
         verifyOtpExpiration(otpRequest);
-        markOtpAsVerified(otpRequest);
+        otpRequest.markAsVerified();
     }
 
     private OtpRequest getPendingOtpRequestOrThrow(String email, String code, OtpRequestType type) {
@@ -105,22 +101,9 @@ public class OtpRequestServiceImpl implements OtpRequestService {
 
     private void verifyOtpExpiration(OtpRequest otpRequest) {
         if (otpRequest.isExpired()) {
-            markOtpAsExpired(otpRequest);
+            otpRequest.markAsExpired();
             throw new BadRequestException("OTP has expired");
         }
-    }
-
-    private void markOtpAsExpired(OtpRequest otpRequest) {
-        updateOtpAsStatus(otpRequest, OtpStatus.EXPIRED);
-    }
-
-    private void markOtpAsVerified(OtpRequest otpRequest) {
-        updateOtpAsStatus(otpRequest, OtpStatus.VERIFIED);
-    }
-
-    private void updateOtpAsStatus(OtpRequest otpRequest, OtpStatus status) {
-        otpRequest.setStatus(status);
-        otpRequestRepo.save(otpRequest);
     }
 
     @Override

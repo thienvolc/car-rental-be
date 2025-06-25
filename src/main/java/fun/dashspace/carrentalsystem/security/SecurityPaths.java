@@ -30,6 +30,7 @@ public class SecurityPaths {
             "/auth/host/**",
             "/hosts/registration/info",
             "/users/profile/**",
+            "/users/driving-license/**",
     };
 
     public static final String[] HOST_PATHS = {

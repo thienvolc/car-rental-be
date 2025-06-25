@@ -1,7 +1,7 @@
 package fun.dashspace.carrentalsystem.entity;
 
 import fun.dashspace.carrentalsystem.entity.base.BaseEntity;
-import fun.dashspace.carrentalsystem.enums.HostIdentificationStatus;
+import fun.dashspace.carrentalsystem.enums.DrivingLicenseStatus;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -47,7 +47,7 @@ public class DrivingLicense extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     @Builder.Default
-    private HostIdentificationStatus status = HostIdentificationStatus.PENDING;
+    private DrivingLicenseStatus status = DrivingLicenseStatus.PENDING;
 
     @Column(name = "license_front_image_url", length = 500, nullable = false)
     @NotBlank(message = "License front image is required")
@@ -61,4 +61,10 @@ public class DrivingLicense extends BaseEntity {
 
     @Column(name = "updated_at", insertable = false, updatable = false)
     private Instant updatedAt;
+
+    public void markAsPending() {
+        this.status = DrivingLicenseStatus.PENDING;
+        this.verifiedAt = null;
+        this.verifiedByUser = null;
+    }
 }
