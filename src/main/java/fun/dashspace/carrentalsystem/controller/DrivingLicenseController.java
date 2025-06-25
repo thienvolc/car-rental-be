@@ -56,6 +56,6 @@ public class DrivingLicenseController {
     @PostMapping("/review")
     public ResponseEntity<ApiResponse<String>> reviewDrivingLicense(@RequestBody ReviewDrivingLicenseRequest req) {
         drivingLicenseService.updateDrivingLicenseServiceStatus(req);
-        return ResponseEntity.ok(ApiResponse.ok("Updated host registration status successfully"));
+        return ResponseEntity.ok(ApiResponse.ok("Updated driving license status successfully"));
     }
 }

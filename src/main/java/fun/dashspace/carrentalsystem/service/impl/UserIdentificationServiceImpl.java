@@ -128,10 +128,8 @@ public class UserIdentificationServiceImpl implements UserIdentificationService 
     }
 
     private HostIdentificationDto toUserIdentificationDto(UserIdentification userIdentification) {
-        return HostIdentificationDto.builder()
+        var hostIdentificatinoDto = HostIdentificationDto.builder()
                 .userId(userIdentification.getUser().getId())
-                .verifiedByUserId(userIdentification.getVerifiedByUser().getId())
-                .verifiedAt(userIdentification.getVerifiedAt())
                 .fullName(userIdentification.getFullName())
                 .phoneNumber(userIdentification.getPhoneNumber())
                 .email(userIdentification.getEmail())
@@ -140,6 +138,13 @@ public class UserIdentificationServiceImpl implements UserIdentificationService 
                 .selfieWithNationalIdImageUrl(userIdentification.getSelfieWithNationalIdImageUrl())
                 .status(userIdentification.getStatus())
                 .build();
+
+        if (userIdentification.getVerifiedByUser() != null) {
+            hostIdentificatinoDto.setVerifiedByUserId(userIdentification.getVerifiedByUser().getId());
+            hostIdentificatinoDto.setVerifiedAt(userIdentification.getVerifiedAt());
+        }
+
+        return hostIdentificatinoDto;
     }
 
     @Override

@@ -14,7 +14,7 @@ public class DrivingLicenseDto {
     private Integer id;
 
     private String username;
-    private String verifiedByUsername;
+    private Integer verifiedByUserId;
     private Instant verifiedAt;
 
     private String licenseNumber;

@@ -1,12 +1,8 @@
 package fun.dashspace.carrentalsystem.service.impl;
 
-import fun.dashspace.carrentalsystem.dto.host.HostIdentificationDto;
-import fun.dashspace.carrentalsystem.dto.host.HostIdentificationReviewDto;
-import fun.dashspace.carrentalsystem.dto.host.ReviewHostIdentificationRequest;
 import fun.dashspace.carrentalsystem.dto.user.*;
 import fun.dashspace.carrentalsystem.entity.DrivingLicense;
 import fun.dashspace.carrentalsystem.entity.User;
-import fun.dashspace.carrentalsystem.entity.UserIdentification;
 import fun.dashspace.carrentalsystem.exception.custom.resource.ResourceNotFoundException;
 import fun.dashspace.carrentalsystem.exception.custom.validation.ResourceAlreadyExistsException;
 import fun.dashspace.carrentalsystem.repository.DrivingLicenseRepo;
@@ -156,17 +152,22 @@ public class DrivingLicenseServiceImpl implements DrivingLicenseService {
     }
 
     private DrivingLicenseDto toDrivingLIcenseDto(DrivingLicense dl) {
-        return DrivingLicenseDto.builder()
+        var dlDto = DrivingLicenseDto.builder()
                 .id(dl.getId())
                 .username(dl.getUser().getUsername())
-                .verifiedByUsername(dl.getVerifiedByUser().getUsername())
                 .licenseNumber(dl.getLicenseNumber())
                 .fullNameOnLicense(dl.getFullNameOnLicense())
-                .verifiedAt(dl.getVerifiedAt())
                 .drivingLicenseBackImageUrl(dl.getLicenseBackImageUrl())
                 .drivingLicenseFrontImageUrl(dl.getLicenseFrontImageUrl())
                 .status(dl.getStatus())
                 .build();
+
+        if (dl.getVerifiedByUser() != null) {
+            dlDto.setVerifiedByUserId(dl.getVerifiedByUser().getId());
+            dlDto.setVerifiedAt(dl.getVerifiedAt());
+        }
+
+        return dlDto;
     }
 
     @Override
