@@ -5,7 +5,6 @@ import fun.dashspace.carrentalsystem.dto.user.UpdateUserProfileRequest;
 import fun.dashspace.carrentalsystem.dto.user.GetUserProfileResponse;
 import fun.dashspace.carrentalsystem.service.UserService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
