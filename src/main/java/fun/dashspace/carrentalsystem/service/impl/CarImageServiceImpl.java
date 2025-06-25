@@ -4,9 +4,10 @@ import fun.dashspace.carrentalsystem.config.props.CarProps;
 import fun.dashspace.carrentalsystem.dto.car.UploadCarImageRequest;
 import fun.dashspace.carrentalsystem.entity.Car;
 import fun.dashspace.carrentalsystem.entity.CarImage;
+import fun.dashspace.carrentalsystem.exception.custom.resource.ResourceNotFoundException;
 import fun.dashspace.carrentalsystem.repository.CarImageRepo;
+import fun.dashspace.carrentalsystem.repository.CarRepo;
 import fun.dashspace.carrentalsystem.service.CarImageService;
-import fun.dashspace.carrentalsystem.service.CarService;
 import fun.dashspace.carrentalsystem.service.ImageUploadService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -19,8 +20,8 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class CarImageServiceImpl implements CarImageService {
 
-    private final CarService carService;
     private final CarImageRepo carImageRepo;
+    private final CarRepo carRepo;
     private final ImageUploadService imageUploadService;
     private final CarProps carProps;
 
@@ -28,9 +29,14 @@ public class CarImageServiceImpl implements CarImageService {
     @Transactional
     public void uploadCarImages(Integer carId, List<UploadCarImageRequest> uploadImageReqList) {
         validateNotOutOfImageLimitPerCar(uploadImageReqList.size());
-        var car = carService.getCarOrThrow(carId);
+        var car = getCarOrThrow(carId);
         for (var req : uploadImageReqList)
             updateOrCreateCarImage(car, req);
+    }
+
+    private Car getCarOrThrow(Integer carId) {
+        return carRepo.findById(carId)
+                .orElseThrow(() -> new ResourceNotFoundException("Car not found with id: " + carId));
     }
 
     private void validateNotOutOfImageLimitPerCar(int imageCount) {

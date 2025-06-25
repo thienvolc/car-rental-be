@@ -1,0 +1,56 @@
+@startuml
+!theme plain
+
+actor "Nhân viên" as Staff
+boundary "XuLyYeuCauDatTourView" as View
+control "XuLyYeuCauDatTourController" as Controller
+entity "PHIEUDATTOUR" as TourReservation
+entity "KHACHDULICH" as Tourist
+entity "HOPDONG" as Contract 
+
+View -> Controller: 1: Lấy yêu cầu đặt tour
+Controller -> TourReservation: 2: Lấy thông tin phiếu đặt tour
+TourReservation --> Controller: 3: Thông tin phiếu đặt tour
+Controller --> View: 4: Thông tin phiếu đặt tour
+View -> View: 5: Hiển thị thông tin phiếu đặt tour
+
+Staff -> View: 6: Xác nhận yêu cầu đặt tour
+Staff -> View: 7: Thông báo tiền cọc tour
+View -> Controller: 8: Yêu cầu thanh toán tiền cọc
+Controller -> Controller: 9: Xử lý kết quả xác nhận đặt cọc
+
+alt Từ chối
+    Staff -> View: 10: Cập nhật trạng thái phiếu đặt tour
+    View -> Controller: 11: Xử lý cập nhật phiếu đặt tour
+    Controller -> TourReservation: 12: Cập nhật trạng thái phiếu đặt tour
+    TourReservation --> Controller: 13: Phiếu đặt tour đã cập nhật
+    Controller --> View: 14: Cập nhật phiếu đặt tour thành công
+    View -> View: 15: Hiển thị thông báo cập nhật thành công
+else Chấp thuận
+    Controller -> Contract: 10: Tạo hợp đồng
+    Staff -> View: 11: Cập nhật trạng thái phiếu đặt tour
+    View -> Controller: 12: Xử lý cập nhật phiếu đặt tour
+    Controller -> TourReservation: 13: Cập nhật trạng thái phiếu đặt tour
+    TourReservation --> Controller: 14: Phiếu đặt tour đã cập nhật
+    Controller --> View: 15: Phiếu đặt tour đã cập nhật
+    View -> View: 16: Hiện thị cập nhật phiếu đặt tour thành công
+
+    Staff -> View: 17: Nhập thông tin khách du lịch
+
+    alt Khách du lịch cũ
+
+    else Khách du lịch mới
+        Staff -> View: 18: Nhập thông tin khách du lịch mới
+        View -> Controller: 19: Tạo khách du lịch mới
+        Controller -> Tourist: 20: Lưu khách du lịch
+        Tourist --> Controller: 21: Khách du lịch đã tạo
+        Controller --> View: 22: Khách du lịch đã tạo
+        View -> View: 23: Hiển thị thông báo khách du lịch đã tạo
+    end
+
+    Staff -> View: 24: Nhập thông tin hợp đồng mới
+    View -> Controller: 25: Tạo hợp đồng mới
+
+end
+
+@enduml

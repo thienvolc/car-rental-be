@@ -17,8 +17,7 @@ public class CarLocationServiceImpl implements CarLocationService {
 
     @Override
     public CarLocation createCarLocation(CarLocationDto location) {
-        var carLocation = buildLocation(location);
-        return carLocationRepo.save(carLocation);
+        return carLocationRepo.save(buildLocation(location));
     }
 
     private CarLocation buildLocation(CarLocationDto location) {
