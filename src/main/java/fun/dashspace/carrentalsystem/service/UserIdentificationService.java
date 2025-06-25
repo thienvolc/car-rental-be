@@ -20,4 +20,6 @@ public interface UserIdentificationService {
     GetAllHostIdentificationInfosResponse getAllHostIdentificationInfos();
 
     HostIdentificationDto getHostIdentification(Integer hostId);
+
+    boolean isHostVerfied(Integer userId);
 }

@@ -134,4 +134,9 @@ public class UserIdentificationServiceImpl implements UserIdentificationService 
                 .status(userIdentification.getStatus())
                 .build();
     }
+
+    @Override
+    public boolean isHostVerfied(Integer userId) {
+        return getUserIdentificationByHost(userId).isVerified();
+    }
 }
