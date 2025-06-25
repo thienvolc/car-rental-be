@@ -35,12 +35,14 @@ public class SecurityPaths {
 
     public static final String[] HOST_PATHS = {
             "/portal/cars/**",
+            "/portal/cars/**",
             "/portal/bookings/**",
             "/portal/datacenter/**",
     };
 
     public static final String[] ADMIN_PATHS = {
-            "hosts/identification/all",
+            "/cars/**",
+            "/hosts/identification/all",
             "/hosts/identification/review",
             "/hosts/identification/**",
             "/users/driving-license/**",

@@ -1,5 +1,6 @@
 package fun.dashspace.carrentalsystem.dto.car;
 
+import fun.dashspace.carrentalsystem.enums.ApprovalStatus;
 import fun.dashspace.carrentalsystem.enums.CarStatus;
 import fun.dashspace.carrentalsystem.enums.FuelType;
 import fun.dashspace.carrentalsystem.enums.TransmissionType;
@@ -29,6 +30,7 @@ public class GetCarResponse {
     private String description;
     private CarLocationDto location;
     private CarStatus status;
+    private ApprovalStatus approvalStatus;
 
     private CarCertificateDto certificate;
 

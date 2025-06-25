@@ -288,3 +288,5 @@ VALUES ('thienvolc@gmail.com', '$2a$10$DMDGPmWAKn/js5uv.2OivuISa5oOdT68vEr/gEGYP
 
 INSERT INTO user_roles (user_id, role_id)
 VALUES ((SELECT id FROM users WHERE email = 'thienvolc@gmail.com'), (SELECT id FROM roles WHERE name = 'ADMIN'));
+
+SHOW COLUMNS FROM cars LIKE 'approval_status';

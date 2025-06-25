@@ -70,4 +70,12 @@ public class CarController {
         carCertificateService.uploadCarCertificate(carId, req);
         return ResponseEntity.ok(ApiResponse.ok("Upload certificate successful"));
     }
+
+    @PutMapping("/{carId}/status")
+    public ResponseEntity<ApiResponse<String>> updateCarStatus(
+            @PathVariable Integer carId, @RequestBody UpdateCarStatusRequest req) {
+        carService.validateCarOwnerShip(carId);
+        carService.updateCarStatus(carId, req);
+        return ResponseEntity.ok(ApiResponse.ok("Update car status successful"));
+    }
 }

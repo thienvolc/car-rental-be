@@ -87,6 +87,7 @@ public class CarServiceImpl implements CarService {
                 .fuelType(car.getFuelType())
                 .numberOfSeats(car.getNumberOfSeats())
                 .status(car.getStatus())
+                .approvalStatus(car.getApprovalStatus())
                 .transmissionType(car.getTransmissionType())
                 .location(toCarLocationDto(car.getLocation()))
                 .images(toCarImageDtoList(car.getImages()))
@@ -132,5 +133,24 @@ public class CarServiceImpl implements CarService {
                 .leftImageUrl(cert.getLeftImageUrl())
                 .rightImageUrl(cert.getRightImageUrl())
                 .build();
+    }
+
+    @Override
+    public void updateCarApprovalStatus(Integer carId, ReviewCarRequest req) {
+        var car = getCarOrThrow(carId);
+        car.setApprovalStatus(req.getStatus());
+        carRepo.save(car);
+    }
+
+    private Car getCarOrThrow(Integer carId) {
+        return carRepo.findById(carId)
+                .orElseThrow(() -> new ResourceNotFoundException("Car not found with id: " + carId));
+    }
+
+    @Override
+    public void updateCarStatus(Integer carId, UpdateCarStatusRequest req) {
+        var car = getCarOrThrow(carId);
+        car.setStatus(req.getStatus());
+        carRepo.save(car);
     }
 }
