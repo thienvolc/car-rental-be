@@ -1,12 +1,15 @@
 package fun.dashspace.carrentalsystem.dto.host;
 
 import fun.dashspace.carrentalsystem.enums.HostIdentificationStatus;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
-public class ReviewHostRegistraionRequest {
-    private Integer hostId;
+@Builder
+public class GetHostIdentificationInfoResponse {
+    private String email;
+    private String phoneNumber;
     private HostIdentificationStatus status;
 }

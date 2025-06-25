@@ -1,8 +1,7 @@
 package fun.dashspace.carrentalsystem.service.impl;
 
 import fun.dashspace.carrentalsystem.dto.auth.request.HostRegistrationRequest;
-import fun.dashspace.carrentalsystem.dto.host.ReviewHostRegistraionRequest;
-import fun.dashspace.carrentalsystem.dto.host.SearchHostRegistraionInfoResponse;
+import fun.dashspace.carrentalsystem.dto.host.*;
 import fun.dashspace.carrentalsystem.entity.UserIdentification;
 import fun.dashspace.carrentalsystem.exception.custom.resource.ResourceNotFoundException;
 import fun.dashspace.carrentalsystem.repository.UserIdentificationRepo;
@@ -11,9 +10,11 @@ import fun.dashspace.carrentalsystem.service.ImageUploadService;
 import fun.dashspace.carrentalsystem.service.UserIdentificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -52,18 +53,17 @@ public class UserIdentificationServiceImpl implements UserIdentificationService 
     }
 
     @Override
-    public SearchHostRegistraionInfoResponse searchHostRegistraionInfo() {
+    public Optional<GetHostIdentificationInfoResponse> getHostIdentificationInfo() {
         return getCurrentUserIdentification()
-                .map(this::toSearchHostRegistraionInfo)
-                .orElseThrow(() -> new ResourceNotFoundException("Host registration information not found"));
+                .map(this::toSearchHostIdentification);
     }
 
     private Optional<UserIdentification> getCurrentUserIdentification() {
         return userIdentificationRepo.findByUser(authenticateFacade.getCurrentUserDetails().user());
     }
 
-    private SearchHostRegistraionInfoResponse toSearchHostRegistraionInfo(UserIdentification userIdentification) {
-        return SearchHostRegistraionInfoResponse.builder()
+    private GetHostIdentificationInfoResponse toSearchHostIdentification(UserIdentification userIdentification) {
+        return GetHostIdentificationInfoResponse.builder()
                 .email(userIdentification.getEmail())
                 .phoneNumber(userIdentification.getPhoneNumber())
                 .status(userIdentification.getStatus())
@@ -71,7 +71,7 @@ public class UserIdentificationServiceImpl implements UserIdentificationService 
     }
 
     @Override
-    public void updateHostRegistraionStatus(ReviewHostRegistraionRequest req) {
+    public void updateHostIdentificationStatus(ReviewHostIdentificationRequest req) {
         var userIdentification = getUserIdentificationByHost(req.getHostId());
         userIdentification.setStatus(req.getStatus());
         userIdentification.setVerifiedByUser(authenticateFacade.getCurrentUserDetails().user());
@@ -81,6 +81,57 @@ public class UserIdentificationServiceImpl implements UserIdentificationService 
 
     private UserIdentification getUserIdentificationByHost(Integer hostId) {
         return userIdentificationRepo.findByUserId(hostId)
-                .orElseThrow(() -> new ResourceNotFoundException("Host registration information not found for ID: " + hostId));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Host dentification information not found for ID: " + hostId));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public GetAllHostIdentificationInfosResponse getAllHostIdentificationInfos() {
+        var userIdentificationList = userIdentificationRepo.findAll();
+        var userIdentificationDtoList = toUserIdentificationReviewDtoList(userIdentificationList);
+        return GetAllHostIdentificationInfosResponse.builder()
+                .userIdentificationList(userIdentificationDtoList)
+                .build();
+    }
+
+    private List<HostIdentificationReviewDto> toUserIdentificationReviewDtoList(
+            List<UserIdentification> userIdentificationList) {
+        if (userIdentificationList.isEmpty())
+            return List.of();
+        return userIdentificationList.stream()
+                .map(this::toUserIdentificationReviewDto)
+                .toList();
+    }
+
+    private HostIdentificationReviewDto toUserIdentificationReviewDto(UserIdentification userIdentification) {
+        return HostIdentificationReviewDto.builder()
+                .hostId(userIdentification.getUser().getId())
+                .username(userIdentification.getUser().getUsername())
+                .email(userIdentification.getEmail())
+                .status(userIdentification.getStatus())
+                .verifiedAt(userIdentification.getVerifiedAt())
+                .build();
+    }
+
+    @Override
+    public HostIdentificationDto getHostIdentification(Integer hostId) {
+        var userIdentification = getUserIdentificationByHost(hostId);
+        return toUserIdentificationDto(userIdentification);
+    }
+
+    private HostIdentificationDto toUserIdentificationDto(UserIdentification userIdentification) {
+        return HostIdentificationDto.builder()
+                .userId(userIdentification.getUser().getId())
+                .verifiedByUserId(userIdentification.getVerifiedByUser().getId())
+                .verifiedAt(userIdentification.getVerifiedAt())
+                .fullName(userIdentification.getFullName())
+                .phoneNumber(userIdentification.getPhoneNumber())
+                .email(userIdentification.getEmail())
+                .nationalIdNumber(userIdentification.getNationalIdNumber())
+                .nationalIdFrontImageUrl(userIdentification.getNationalIdFrontImageUrl())
+                .selfieWithNationalIdImageUrl(userIdentification.getSelfieWithNationalIdImageUrl())
+                .status(userIdentification.getStatus())
+                .build();
     }
 }

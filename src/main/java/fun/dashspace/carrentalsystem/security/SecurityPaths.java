@@ -40,7 +40,9 @@ public class SecurityPaths {
     };
 
     public static final String[] ADMIN_PATHS = {
-            "/hosts/registration/review",
+            "hosts/identification/all",
+            "/hosts/identification/review",
+            "/hosts/identification/**",
             "/admin/**",
             "/users/all",
             "/reports/**",

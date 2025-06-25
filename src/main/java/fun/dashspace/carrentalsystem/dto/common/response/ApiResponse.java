@@ -31,4 +31,11 @@ public class ApiResponse<T> {
                 .message(message)
                 .build();
     }
+
+    public static <T> ApiResponse<T> notFound(String message) {
+        return ApiResponse.<T>builder()
+                .status(HttpStatus.NOT_FOUND.value())
+                .message(message)
+                .build();
+    }
 }
