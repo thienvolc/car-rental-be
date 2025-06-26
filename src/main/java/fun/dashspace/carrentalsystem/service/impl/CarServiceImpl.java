@@ -73,7 +73,7 @@ public class CarServiceImpl implements CarService {
 
     @Override
     @Transactional(readOnly = true)
-    public GetCarResponse getCarDetails(Integer carId) {
+    public GetCarPortalResponse getCarPortalDetails(Integer carId) {
         var car = getCarWithImages(carId);
         return toGetCarResponse(car);
     }
@@ -83,8 +83,8 @@ public class CarServiceImpl implements CarService {
                 .orElseThrow(() -> new ResourceNotFoundException("Car not found with id: " + carId));
     }
 
-    private GetCarResponse toGetCarResponse(Car car) {
-        var res = GetCarResponse.builder()
+    private GetCarPortalResponse toGetCarResponse(Car car) {
+        var res = GetCarPortalResponse.builder()
                 .carId(car.getId())
                 .ownerId(car.getOwner().getId())
                 .brand(car.getBrand())
@@ -199,5 +199,31 @@ public class CarServiceImpl implements CarService {
         var car = getCarOrThrow(carId);
         car.setStatus(req.getStatus());
         carRepo.save(car);
+    }
+
+    @Override
+    public CarResponseDTO getCarDetails(Integer carId) {
+        var car = getCarWithImages(carId);
+        return toCarResponseDTO(car);
+    }
+
+    private CarResponseDTO toCarResponseDTO(Car car) {
+        return CarResponseDTO.builder()
+                .id(car.getId())
+                .brand(car.getBrand())
+                .model(car.getModel())
+                .yearOfManufacture(car.getYearOfManufacture())
+                .ownerName(car.getOwner().getUsername())
+                .pricePerDay(car.getBasePricePerDay())
+                .brand(car.getBrand())
+                .location(toCarLocationDto(car.getLocation()))
+                .imageUrls(toCarImageDtoList(car.getImages()))
+                .description(car.getDescription())
+                .licensePlateNumber(car.getLicensePlateNumber())
+                .fuelConsumption(car.getFuelConsumption())
+                .fuelType(car.getFuelType())
+                .numberOfSeats(car.getNumberOfSeats())
+                .transmissionType(car.getTransmissionType())
+                .build();
     }
 }

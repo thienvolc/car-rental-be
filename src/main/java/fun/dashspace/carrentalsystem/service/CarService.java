@@ -6,7 +6,7 @@ public interface CarService {
     void createCar(PostCarRequest req);
 
     void validateCarOwnerShip(Integer carId);
-    GetCarResponse getCarDetails(Integer carId);
+    GetCarPortalResponse getCarPortalDetails(Integer carId);
 
     void updateCarStatus(Integer carId, UpdateCarStatusRequest req);
 
@@ -17,4 +17,6 @@ public interface CarService {
     GetAllCarsResponse getAllOwnedCars();
 
     GetAllCarsResponse getAllCars();
+
+    CarResponseDTO getCarDetails(Integer carId);
 }

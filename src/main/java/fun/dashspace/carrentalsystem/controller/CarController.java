@@ -73,9 +73,9 @@ public class CarController {
     }
 
     @GetMapping("/portal/cars/{carId}")
-    public ResponseEntity<ApiResponse<GetCarResponse>> getCarDetails(@PathVariable Integer carId) {
+    public ResponseEntity<ApiResponse<GetCarPortalResponse>> getCarPortalDetails(@PathVariable Integer carId) {
         carService.validateCarOwnerShip(carId);
-        var carDetails = carService.getCarDetails(carId);
+        var carDetails = carService.getCarPortalDetails(carId);
         return ResponseEntity.ok(ApiResponse.ok(carDetails, "Get car details successful"));
     }
 
@@ -89,6 +89,12 @@ public class CarController {
     public ResponseEntity<ApiResponse<GetAllCarsResponse>> getAllCars() {
         var carListRes = carService.getAllCars();
         return ResponseEntity.ok(ApiResponse.ok(carListRes, "Get all car successful"));
+    }
+
+    @GetMapping("/cars/{carId}/bookings")
+    public ResponseEntity<ApiResponse<CarResponseDTO>> getCarDetails(@PathVariable Integer carId) {
+        CarResponseDTO res = carService.getCarDetails(carId);
+        return ResponseEntity.ok(ApiResponse.ok(res, "Get car successful"));
     }
 
     @PutMapping("/portal/cars/{carId}/certificate")

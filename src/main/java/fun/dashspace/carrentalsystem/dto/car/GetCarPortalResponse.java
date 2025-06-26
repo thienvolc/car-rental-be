@@ -14,7 +14,7 @@ import java.util.List;
 @Getter
 @Setter
 @Builder
-public class GetCarResponse {
+public class GetCarPortalResponse {
     private Integer carId;
     private Integer ownerId;
 

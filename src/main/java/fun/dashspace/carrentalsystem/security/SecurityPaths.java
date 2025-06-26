@@ -18,6 +18,7 @@ public class SecurityPaths {
             "/auth/otp/resend",
 
             "/cars/search",
+            "/cars/{carId}/bookings",
 
             "/swagger/**",
             "/v3/api-docs/**",

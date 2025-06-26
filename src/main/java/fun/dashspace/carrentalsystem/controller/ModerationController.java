@@ -4,7 +4,6 @@ import fun.dashspace.carrentalsystem.dto.car.ReviewCarRequest;
 import fun.dashspace.carrentalsystem.dto.common.response.ApiResponse;
 import fun.dashspace.carrentalsystem.dto.user.GetAllUsersReponse;
 import fun.dashspace.carrentalsystem.dto.user.UpdateUserStatusRequest;
-import fun.dashspace.carrentalsystem.service.AuthService;
 import fun.dashspace.carrentalsystem.service.CarService;
 import fun.dashspace.carrentalsystem.service.UserService;
 import lombok.RequiredArgsConstructor;
