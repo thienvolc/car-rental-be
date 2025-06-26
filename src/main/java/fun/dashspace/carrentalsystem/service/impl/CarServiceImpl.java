@@ -9,6 +9,7 @@ import fun.dashspace.carrentalsystem.exception.custom.resource.ResourceNotFoundE
 import fun.dashspace.carrentalsystem.exception.custom.validation.ResourceAlreadyExistsException;
 import fun.dashspace.carrentalsystem.repository.CarRepo;
 import fun.dashspace.carrentalsystem.security.AuthenticateFacade;
+import fun.dashspace.carrentalsystem.service.CarImageService;
 import fun.dashspace.carrentalsystem.service.CarLocationService;
 import fun.dashspace.carrentalsystem.service.CarService;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +26,7 @@ public class CarServiceImpl implements CarService {
     private final AuthenticateFacade authenticateFacade;
     private final CarRepo carRepo;
     private final CarLocationService carLocationService;
+    private final CarImageService carImageService;
 
     @Override
     public void createCar(PostCarRequest req) {
@@ -53,6 +55,14 @@ public class CarServiceImpl implements CarService {
                 .numberOfSeats(req.getNumberOfSeats())
                 .transmissionType(req.getTransmissionType())
                 .build();
+    }
+
+    @Override
+    public void updateCarRentalInfo(Integer carId, UpdateCarRentalInfoRequest req) {
+        var car = getCarOrThrow(carId);
+        car.setBasePricePerDay(req.getBasePricePerDay());
+        car.setDescription(req.getDescription());
+        carRepo.save(car);
     }
 
     @Override
@@ -132,6 +142,43 @@ public class CarServiceImpl implements CarService {
                 .frontImageUrl(cert.getFrontImageUrl())
                 .leftImageUrl(cert.getLeftImageUrl())
                 .rightImageUrl(cert.getRightImageUrl())
+                .build();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public GetAllCarsResponse getAllOwnedCars() {
+        var user = authenticateFacade.getCurrentUser();
+        var cars = carRepo.findAllByOwner(user);
+        List<CarDisplayItem> carItemList = buildCarItemList(cars);
+        return new GetAllCarsResponse(carItemList);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public GetAllCarsResponse getAllCars() {
+        var cars = carRepo.findAll();
+        List<CarDisplayItem> carItemList = buildCarItemList(cars);
+        return new GetAllCarsResponse(carItemList);
+    }
+
+    private List<CarDisplayItem> buildCarItemList(List<Car> cars) {
+        return cars.stream()
+                .map(this::toCarDisplayItem)
+                .toList();
+    }
+
+    private CarDisplayItem toCarDisplayItem(Car car) {
+        return CarDisplayItem.builder()
+                .carId(car.getId())
+                .mainImageUrl(carImageService.getMainImageUrlByCarId(car.getId()))
+                .basePricePerDay(car.getBasePricePerDay())
+                .yearOfManufacture(car.getYearOfManufacture())
+                .brand(car.getBrand())
+                .model(car.getModel())
+                .location(toCarLocationDto(car.getLocation()))
+                .status(car.getStatus())
+                .approvalStatus(car.getApprovalStatus())
                 .build();
     }
 

@@ -1,13 +1,13 @@
 package fun.dashspace.carrentalsystem.dto.car;
 
-import lombok.*;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.math.BigDecimal;
 
 @Getter
 @Setter
-@Builder
-public class CarLocationDto {
+public class UpdateCarLocationRequest {
     private String province;
     private String district;
     private String ward;

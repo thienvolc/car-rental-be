@@ -42,10 +42,10 @@ public class SecurityPaths {
 
     public static final String[] ADMIN_PATHS = {
             "/cars/**",
+            "/users/**",
             "/hosts/identification/all",
             "/hosts/identification/review",
             "/hosts/identification/**",
-            "/users/driving-license/**",
             "/admin/**",
             "/reports/**",
             "/datacenter/**",

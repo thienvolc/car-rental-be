@@ -6,4 +6,6 @@ import java.util.List;
 
 public interface CarImageService {
     void uploadCarImages(Integer carId, List<UploadCarImageRequest> uploadImageReqList);
+
+    String getMainImageUrlByCarId(Integer carId);
 }

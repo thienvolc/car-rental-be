@@ -1,10 +1,9 @@
 package fun.dashspace.carrentalsystem.service.impl;
 
-import fun.dashspace.carrentalsystem.dto.user.CreateDrivingLicenseRequest;
-import fun.dashspace.carrentalsystem.dto.user.GetUserProfileResponse;
-import fun.dashspace.carrentalsystem.dto.user.UpdateUserProfileRequest;
+import fun.dashspace.carrentalsystem.dto.user.*;
 import fun.dashspace.carrentalsystem.entity.User;
 import fun.dashspace.carrentalsystem.exception.custom.resource.UserNotFoundException;
+import fun.dashspace.carrentalsystem.exception.custom.validation.BadRequestException;
 import fun.dashspace.carrentalsystem.repository.UserRepo;
 import fun.dashspace.carrentalsystem.security.AuthenticateFacade;
 import fun.dashspace.carrentalsystem.service.ImageUploadService;
@@ -17,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -138,5 +138,50 @@ public class UserServiceImpl implements UserService {
 
     private String uploadImage(MultipartFile image) {
         return imageUploadService.uploadFile(image).getSecureUrl();
+    }
+
+    @Override
+    public void updateUserStatus(Integer userId, UpdateUserStatusRequest req) {
+        validateNotCurrentUser(userId);
+        var user = getUserByIdOrThrow(userId);
+        user.setStatus(req.getStatus());
+        userRepo.save(user);
+    }
+
+    private void validateNotCurrentUser(Integer userId) {
+        if (authenticateFacade.getCurrentUser().getId().equals(userId))
+            throw new BadRequestException("Cannot update status of the user self");
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public GetAllUsersReponse getAllUsers() {
+        var userList = userRepo.findAllWithDrivingLicenseAndUserIdentification();
+        var userDisplayItemList = buildUserDisplayItemList(userList);
+        return new GetAllUsersReponse(userDisplayItemList);
+    }
+
+    private List<UserDisplayItem> buildUserDisplayItemList(List<User> userList) {
+        return userList.stream()
+                .map(this::toUserDisplayItem)
+                .toList();
+    }
+
+    private UserDisplayItem toUserDisplayItem(User user) {
+        var userItem = UserDisplayItem.builder()
+                .id(user.getId())
+                .email(user.getEmail())
+                .username(user.getUsername())
+                .phoneNumber(user.getPhoneNumber())
+                .avatarUrl(user.getAvatarUrl())
+                .status(user.getStatus())
+                .build();
+
+        if (user.getDrivingLicense() != null)
+            userItem.setDrivingLicenseStatus(user.getDrivingLicense().getStatus());
+        if (user.getUserIdentification() != null)
+            userItem.setHostStatus(user.getUserIdentification().getStatus());
+
+        return userItem;
     }
 }

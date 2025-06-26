@@ -69,4 +69,11 @@ public class CarImageServiceImpl implements CarImageService {
                 .build();
         carImageRepo.save(newCarImage);
     }
+
+    @Override
+    public String getMainImageUrlByCarId(Integer carId) {
+        return carImageRepo.findByCarIdAndImageOrder(carId, 1)
+                .map(CarImage::getImageUrl)
+                .orElseThrow(() -> new ResourceNotFoundException("Main image not found for car with id: " + carId));
+    }
 }

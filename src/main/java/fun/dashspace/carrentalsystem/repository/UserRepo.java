@@ -6,10 +6,12 @@ import fun.dashspace.carrentalsystem.entity.User;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface UserRepo extends JpaRepository<User, Integer> {
     Optional<User> findByEmail(String email);
+
     Optional<User> findById(Integer userId);
 
     boolean existsByEmail(String email);
@@ -19,4 +21,10 @@ public interface UserRepo extends JpaRepository<User, Integer> {
             "LEFT JOIN FETCH ur.role r " +
             "WHERE u.email = :email")
     Optional<User> findByEmailWithRoles(@Param("email") String email);
+
+    @Query("""
+            SELECT u FROM User u
+            LEFT JOIN FETCH u.drivingLicense
+            LEFT JOIN FETCH u.userIdentification""")
+    List<User> findAllWithDrivingLicenseAndUserIdentification();
 }

@@ -1,9 +1,6 @@
 package fun.dashspace.carrentalsystem.service;
 
-import fun.dashspace.carrentalsystem.dto.car.GetCarResponse;
-import fun.dashspace.carrentalsystem.dto.car.PostCarRequest;
-import fun.dashspace.carrentalsystem.dto.car.ReviewCarRequest;
-import fun.dashspace.carrentalsystem.dto.car.UpdateCarStatusRequest;
+import fun.dashspace.carrentalsystem.dto.car.*;
 
 public interface CarService {
     void createCar(PostCarRequest req);
@@ -14,4 +11,10 @@ public interface CarService {
     void updateCarStatus(Integer carId, UpdateCarStatusRequest req);
 
     void updateCarApprovalStatus(Integer carId, ReviewCarRequest req);
+
+    void updateCarRentalInfo(Integer carId, UpdateCarRentalInfoRequest req);
+
+    GetAllCarsResponse getAllOwnedCars();
+
+    GetAllCarsResponse getAllCars();
 }

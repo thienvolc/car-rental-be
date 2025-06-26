@@ -4,6 +4,7 @@ import fun.dashspace.carrentalsystem.dto.car.*;
 import fun.dashspace.carrentalsystem.dto.common.response.ApiResponse;
 import fun.dashspace.carrentalsystem.service.CarCertificateService;
 import fun.dashspace.carrentalsystem.service.CarImageService;
+import fun.dashspace.carrentalsystem.service.CarLocationService;
 import fun.dashspace.carrentalsystem.service.CarService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -14,21 +15,37 @@ import java.util.List;
 import java.util.stream.IntStream;
 
 @RestController
-@RequestMapping("/portal/cars")
 @RequiredArgsConstructor
 public class CarController {
 
     private final CarService carService;
     private final CarImageService carImageService;
     private final CarCertificateService carCertificateService;
+    private final CarLocationService carLocationService;
 
-    @PostMapping
+    @PostMapping("/portal/cars")
     public ResponseEntity<ApiResponse<String>> postCar(@RequestBody PostCarRequest req) {
         carService.createCar(req);
         return ResponseEntity.ok(ApiResponse.ok("Post car successful"));
     }
 
-    @PutMapping("/{carId}/images")
+    @PutMapping("/portal/cars/{carId}/rental")
+    public ResponseEntity<ApiResponse<String>> updateRentalInfo(
+            @PathVariable Integer carId, @RequestBody UpdateCarRentalInfoRequest req) {
+        carService.validateCarOwnerShip(carId);
+        carService.updateCarRentalInfo(carId, req);
+        return ResponseEntity.ok(ApiResponse.ok("Update rental info successful"));
+    }
+
+    @PutMapping("/portal/cars/{carId}/location")
+    public ResponseEntity<ApiResponse<String>> updateLocation(
+            @PathVariable Integer carId, @RequestBody UpdateCarLocationRequest req) {
+        carService.validateCarOwnerShip(carId);
+        carLocationService.update(carId, req);
+        return ResponseEntity.ok(ApiResponse.ok("Update car location successful"));
+    }
+
+    @PutMapping("/portal/cars/{carId}/images")
     public ResponseEntity<ApiResponse<String>> uploadCarImages(
             @PathVariable Integer carId,
             @RequestPart("orders") List<CarImageOrder> orders,
@@ -55,14 +72,26 @@ public class CarController {
                 .build();
     }
 
-    @GetMapping("/{carId}")
+    @GetMapping("/portal/cars/{carId}")
     public ResponseEntity<ApiResponse<GetCarResponse>> getCarDetails(@PathVariable Integer carId) {
         carService.validateCarOwnerShip(carId);
         var carDetails = carService.getCarDetails(carId);
         return ResponseEntity.ok(ApiResponse.ok(carDetails, "Get car details successful"));
     }
 
-    @PutMapping("/{carId}/certificate")
+    @GetMapping("/portals/cars/all")
+    public ResponseEntity<ApiResponse<GetAllCarsResponse>> getAllOwnedCars() {
+        var carListRes = carService.getAllOwnedCars();
+        return ResponseEntity.ok(ApiResponse.ok(carListRes, "Get all car successful"));
+    }
+
+    @GetMapping("/cars/all")
+    public ResponseEntity<ApiResponse<GetAllCarsResponse>> getAllCars() {
+        var carListRes = carService.getAllCars();
+        return ResponseEntity.ok(ApiResponse.ok(carListRes, "Get all car successful"));
+    }
+
+    @PutMapping("/portal/cars/{carId}/certificate")
     public ResponseEntity<ApiResponse<String>> uploadCertificate(
             @PathVariable Integer carId,
             @ModelAttribute UpdateCarCertificateRequest req) {
@@ -71,7 +100,7 @@ public class CarController {
         return ResponseEntity.ok(ApiResponse.ok("Upload certificate successful"));
     }
 
-    @PutMapping("/{carId}/status")
+    @PutMapping("/portal/cars/{carId}/status")
     public ResponseEntity<ApiResponse<String>> updateCarStatus(
             @PathVariable Integer carId, @RequestBody UpdateCarStatusRequest req) {
         carService.validateCarOwnerShip(carId);
