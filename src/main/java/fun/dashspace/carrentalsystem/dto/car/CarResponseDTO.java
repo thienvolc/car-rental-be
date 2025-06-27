@@ -2,14 +2,18 @@ package fun.dashspace.carrentalsystem.dto.car;
 
 import fun.dashspace.carrentalsystem.enums.FuelType;
 import fun.dashspace.carrentalsystem.enums.TransmissionType;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.util.List;
 
 @Data
 @Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class CarResponseDTO {
     private Integer id;
     private String brand;
